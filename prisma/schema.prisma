@@ -1,0 +1,42 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Employee {
+  id   Int           @id @default(autoincrement())
+  name String        @unique
+  logs EmployeeLog[]
+}
+
+model Tag {
+  id   Int           @id @default(autoincrement())
+  name String        @unique
+  logs EmployeeLog[]
+}
+
+model EmployeeLog {
+  id         Int      @id @default(autoincrement())
+  employee   Employee @relation(fields: [employeeId], references: [id])
+  employeeId Int
+  activity   String
+  field      String
+  date       DateTime
+  startTime  String
+  endTime    String
+  isNew      Boolean  @default(true)
+  accuracy   Int
+  audioUrl   String
+  transcript String
+  mapX       Float
+  mapY       Float
+  tags       Tag[]
+  createdAt  DateTime @default(now())
+}
