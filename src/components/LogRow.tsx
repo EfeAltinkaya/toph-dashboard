@@ -65,7 +65,7 @@ export function LogRow({
         <button
           type="button"
           onClick={handleToggle}
-          className="rounded-full bg-neutral-100 px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-200"
+          className="rounded-full border border-neutral-300 bg-white px-3 py-1.5 text-xs font-medium text-neutral-900 hover:bg-neutral-50"
         >
           {expanded ? "Close" : "View"}
         </button>
@@ -114,7 +114,7 @@ export function LogRow({
             <button
               type="button"
               onClick={() => setMapOpen(true)}
-              className="absolute right-3 bottom-3 flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1.5 text-xs font-medium text-neutral-800 shadow-sm hover:bg-white"
+              className="absolute right-3 bottom-3 flex items-center gap-1.5 rounded-full border border-neutral-300 bg-white px-3 py-1.5 text-xs font-medium text-neutral-900 hover:bg-neutral-50"
             >
               <Maximize2 size={12} />
               Expand Map
@@ -139,7 +139,7 @@ export function LogRow({
               <button
                 type="button"
                 onClick={() => setMapOpen(false)}
-                className="rounded-full bg-neutral-100 px-3 py-1 text-xs font-medium text-neutral-700 hover:bg-neutral-200"
+                className="rounded-full border border-neutral-300 bg-white px-3 py-1 text-xs font-medium text-neutral-900 hover:bg-neutral-50"
               >
                 Close
               </button>

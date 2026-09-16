@@ -46,13 +46,11 @@ export function AudioPlayer({
         onPause={() => setPlaying(false)}
         onEnded={() => setPlaying(false)}
       />
-      <div className="flex h-14 items-center gap-[3px] rounded-lg bg-neutral-50 px-3">
+      <div className="flex h-14 items-center gap-[3px] px-1">
         {bars.map((h, i) => (
           <div
             key={i}
-            className={`w-[3px] rounded-full ${
-              playing ? "bg-emerald-500" : "bg-neutral-300"
-            }`}
+            className="w-[3px] rounded-full bg-emerald-800"
             style={{ height: `${h * 100}%` }}
           />
         ))}
@@ -60,7 +58,7 @@ export function AudioPlayer({
       <button
         type="button"
         onClick={toggle}
-        className="mt-2 flex w-full items-center justify-center gap-2 rounded-full bg-neutral-900 py-2 text-sm font-medium text-white hover:bg-neutral-800"
+        className="mt-2 flex w-full items-center justify-center gap-2 rounded-full border border-neutral-300 bg-white py-2 text-sm font-medium text-neutral-900 hover:bg-neutral-50"
       >
         {playing ? <Pause size={14} /> : <Play size={14} />}
         {playing ? "Pause Recording" : "Play Recording"}

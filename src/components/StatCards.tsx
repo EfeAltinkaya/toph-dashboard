@@ -1,4 +1,4 @@
-import { Mic, Users, Percent } from "lucide-react";
+import { Calendar, IdCard, Percent } from "lucide-react";
 
 export function StatCards({
   todaysRecordings,
@@ -14,12 +14,12 @@ export function StatCards({
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
       <Card
-        icon={<Mic size={14} />}
+        icon={<Calendar size={14} />}
         label="Todays Recordings"
         value={todaysRecordings}
-        pill={newToday > 0 ? `${newToday} New` : undefined}
+        note={newToday > 0 ? `${newToday} New` : undefined}
       />
-      <Card icon={<Users size={14} />} label="Active Workers" value={activeWorkers} />
+      <Card icon={<IdCard size={14} />} label="Active Workers" value={activeWorkers} />
       <Card
         icon={<Percent size={14} />}
         label="Response Accuracy"
@@ -33,12 +33,12 @@ function Card({
   icon,
   label,
   value,
-  pill,
+  note,
 }: {
   icon: React.ReactNode;
   label: string;
   value: number;
-  pill?: string;
+  note?: string;
 }) {
   return (
     <div className="rounded-2xl border border-neutral-200 bg-white p-4">
@@ -48,11 +48,7 @@ function Card({
       </div>
       <div className="mt-2 flex items-center gap-2">
         <span className="text-3xl font-semibold text-neutral-900">{value}</span>
-        {pill && (
-          <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-600">
-            {pill}
-          </span>
-        )}
+        {note && <span className="text-sm text-neutral-400">{note}</span>}
       </div>
     </div>
   );

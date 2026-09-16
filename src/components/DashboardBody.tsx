@@ -3,9 +3,9 @@
 import { useMemo, useState } from "react";
 import {
   Search,
-  Inbox,
-  ArrowUpDown,
-  ListFilter,
+  AudioLines,
+  SlidersHorizontal,
+  Filter as FilterIcon,
   Calendar,
   X,
 } from "lucide-react";
@@ -116,15 +116,24 @@ export function DashboardBody({
       <div className="mt-6 rounded-2xl border border-neutral-200 bg-white">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-neutral-100 px-4 py-3">
           <div className="flex items-center gap-1.5 text-sm font-semibold text-neutral-900">
-            <Inbox size={15} />
+            <AudioLines size={15} />
             New Employee Logs ({filtered.length})
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
             <div className="relative">
-              <Pill onClick={() => setDateMenuOpen((v) => !v)} icon={<Calendar size={12} />}>
-                Date
-              </Pill>
+              {dateRange === "all" ? (
+                <Pill onClick={() => setDateMenuOpen((v) => !v)} icon={<Calendar size={12} />}>
+                  Date
+                </Pill>
+              ) : (
+                <ActivePill
+                  onClick={() => setDateMenuOpen((v) => !v)}
+                  onClear={() => setDateRange("all")}
+                >
+                  Date
+                </ActivePill>
+              )}
               {dateMenuOpen && (
                 <DropdownMenu onClose={() => setDateMenuOpen(false)}>
                   {(["all", "week", "month"] as DateRange[]).map((opt) => (
@@ -149,29 +158,33 @@ export function DashboardBody({
 
             <Pill
               onClick={() => setSortDesc((v) => !v)}
-              icon={<ArrowUpDown size={12} />}
+              icon={<SlidersHorizontal size={12} />}
             >
               Sort
             </Pill>
 
             {dateRange !== "all" && (
-              <Pill
-                onClick={() => setDateRange("all")}
-                trailingIcon={<X size={12} />}
-              >
+              <ActivePill onClick={() => {}} onClear={() => setDateRange("all")}>
                 {dateRangeLabel} ({filtered.length})
-              </Pill>
+              </ActivePill>
             )}
 
             <div className="relative">
-              <Pill
-                onClick={() => setFilterMenuOpen((v) => !v)}
-                icon={<ListFilter size={12} />}
-                trailingIcon={activityFilter ? <X size={12} /> : undefined}
-                onTrailingClick={() => setActivityFilter(null)}
-              >
-                {activityFilter ?? "Filter"}
-              </Pill>
+              {activityFilter ? (
+                <ActivePill
+                  onClick={() => setFilterMenuOpen((v) => !v)}
+                  onClear={() => setActivityFilter(null)}
+                >
+                  {activityFilter}
+                </ActivePill>
+              ) : (
+                <Pill
+                  onClick={() => setFilterMenuOpen((v) => !v)}
+                  icon={<FilterIcon size={12} />}
+                >
+                  Filter
+                </Pill>
+              )}
               {filterMenuOpen && (
                 <DropdownMenu onClose={() => setFilterMenuOpen(false)}>
                   <MenuOption
@@ -234,34 +247,52 @@ export function DashboardBody({
 function Pill({
   children,
   icon,
-  trailingIcon,
   onClick,
-  onTrailingClick,
 }: {
   children: React.ReactNode;
   icon?: React.ReactNode;
-  trailingIcon?: React.ReactNode;
   onClick?: () => void;
-  onTrailingClick?: () => void;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="flex items-center gap-1.5 rounded-full bg-neutral-100 px-3 py-1.5 text-xs font-medium text-neutral-600 hover:bg-neutral-200"
+      className="flex items-center gap-1.5 rounded-full border border-neutral-300 bg-white px-3 py-1.5 text-xs font-medium text-neutral-600 hover:bg-neutral-50"
     >
       {icon}
       {children}
-      {trailingIcon && (
-        <span
-          onClick={(e) => {
-            e.stopPropagation();
-            onTrailingClick?.();
-          }}
-        >
-          {trailingIcon}
-        </span>
-      )}
+    </button>
+  );
+}
+
+// Chips representing an active/removable filter (Date range, activity type)
+// render as solid black pills with a leading clear icon, matching the Figma;
+// utility buttons that just open a menu (Sort, an unset Filter) render as
+// plain outlined pills instead, see `Pill` above.
+function ActivePill({
+  children,
+  onClick,
+  onClear,
+}: {
+  children: React.ReactNode;
+  onClick?: () => void;
+  onClear: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex items-center gap-1.5 rounded-full bg-neutral-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-neutral-800"
+    >
+      <span
+        onClick={(e) => {
+          e.stopPropagation();
+          onClear();
+        }}
+      >
+        <X size={12} />
+      </span>
+      {children}
     </button>
   );
 }

@@ -53,8 +53,7 @@ export function FieldMap({
         />
       ))}
       <g transform={`translate(${x} ${y})`}>
-        <circle r={3.2} fill="#0f172a" stroke="white" strokeWidth={0.8} />
-        <circle r={1} fill="white" />
+        <circle r={3.2} fill="#2563eb" stroke="white" strokeWidth={0.8} />
       </g>
     </svg>
   );

@@ -1,6 +1,6 @@
 import {
-  LayoutDashboard,
-  ListChecks,
+  ChartLine,
+  AudioLines,
   Map as MapIcon,
   ShieldCheck,
   FileText,
@@ -19,8 +19,8 @@ const NAV_SECTIONS = [
   {
     label: "Overview",
     items: [
-      { label: "Dashboard", icon: LayoutDashboard, active: true },
-      { label: "Activity Logs", icon: ListChecks },
+      { label: "Dashboard", icon: ChartLine, active: true },
+      { label: "Activity Logs", icon: AudioLines },
       { label: "Map", icon: MapIcon },
     ],
   },
@@ -81,7 +81,7 @@ export function Sidebar({ newLogCount }: { newLogCount: number }) {
                       key={item.label}
                       className={`flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm ${
                         item.active
-                          ? "bg-neutral-800 text-white"
+                          ? "bg-neutral-100 text-neutral-900"
                           : "text-neutral-400"
                       }`}
                     >
