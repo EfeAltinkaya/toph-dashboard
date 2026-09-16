@@ -52,8 +52,8 @@ model EmployeeLog {
   accuracy   Int
   audioUrl   String
   transcript String
-  mapX       Float
-  mapY       Float
+  lat        Float
+  lng        Float
   tags       Tag[]
   createdAt  DateTime @default(now())
 }

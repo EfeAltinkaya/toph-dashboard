@@ -10,8 +10,8 @@ export type LogWithRelations = {
   accuracy: number;
   audioUrl: string;
   transcript: string;
-  mapX: number;
-  mapY: number;
+  lat: number;
+  lng: number;
   tags: { id: number; name: string }[];
 };
 

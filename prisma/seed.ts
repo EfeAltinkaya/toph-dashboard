@@ -1,28 +1,12 @@
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import { PrismaClient } from "../src/generated/prisma/client";
+import { FIELD_COORDS, FIELD_NAMES } from "../src/lib/fields";
+import { ACTIVITIES } from "../src/lib/constants";
 
 const adapter = new PrismaBetterSqlite3({
   url: process.env.DATABASE_URL || "file:./dev.db",
 });
 const prisma = new PrismaClient({ adapter });
-
-const ACTIVITIES = [
-  "Spraying",
-  "Harvesting",
-  "Planting",
-  "Irrigation",
-  "Scouting",
-  "Pruning",
-  "Soil work",
-  "Equipment maintenance",
-] as const;
-
-const FIELDS: Record<string, { x: number; y: number }> = {
-  "Field A": { x: 24, y: 32 },
-  "Field B": { x: 66, y: 24 },
-  "Field C": { x: 30, y: 72 },
-  "Field D": { x: 72, y: 66 },
-};
 
 const TAG_NAMES = ["Needs Review", "Verified", "Flagged", "Follow-up"];
 
@@ -78,7 +62,7 @@ async function main() {
     EMPLOYEES.map((name) => prisma.employee.create({ data: { name } }))
   );
 
-  const fieldNames = Object.keys(FIELDS);
+  const fieldNames = FIELD_NAMES;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -112,8 +96,8 @@ async function main() {
           accuracy,
           audioUrl: "/audio/sample-log.wav",
           transcript: buildTranscript(activity, field, date.toISOString()),
-          mapX: FIELDS[field].x,
-          mapY: FIELDS[field].y,
+          lat: FIELD_COORDS[field].lat,
+          lng: FIELD_COORDS[field].lng,
           tags:
             logIndex % 4 === 0
               ? { connect: [{ id: tags[logIndex % tags.length].id }] }
