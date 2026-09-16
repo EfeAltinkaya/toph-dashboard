@@ -1,5 +1,4 @@
 import { prisma } from "@/lib/prisma";
-import { Sidebar } from "@/components/Sidebar";
 import { DashboardBody } from "@/components/DashboardBody";
 
 // Dashboard reflects live database state (recordings logged today, tags
@@ -27,21 +26,16 @@ export default async function DashboardPage() {
     ? Math.round(logs.reduce((sum, l) => sum + l.accuracy, 0) / logs.length)
     : 0;
 
-  const newLogCount = logs.filter((l) => l.isNew).length;
-
   return (
-    <div className="flex min-h-screen">
-      <Sidebar newLogCount={newLogCount} />
-      <DashboardBody
-        logs={logs}
-        allTags={tags}
-        stats={{
-          todaysRecordings: todaysLogs.length,
-          newToday: todaysLogs.filter((l) => l.isNew).length,
-          activeWorkers,
-          responseAccuracy,
-        }}
-      />
-    </div>
+    <DashboardBody
+      logs={logs}
+      allTags={tags}
+      stats={{
+        todaysRecordings: todaysLogs.length,
+        newToday: todaysLogs.filter((l) => l.isNew).length,
+        activeWorkers,
+        responseAccuracy,
+      }}
+    />
   );
 }
