@@ -17,6 +17,7 @@ model User {
   passwordHash String
   createdAt    DateTime @default(now())
   sessions     Session[]
+  messages     Message[]
 }
 
 model Session {
@@ -37,6 +38,14 @@ model Tag {
   id   Int           @id @default(autoincrement())
   name String        @unique
   logs EmployeeLog[]
+}
+
+model Message {
+  id        Int      @id @default(autoincrement())
+  author    User     @relation(fields: [authorId], references: [id])
+  authorId  Int
+  body      String
+  createdAt DateTime @default(now())
 }
 
 model EmployeeLog {

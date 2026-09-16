@@ -1,0 +1,36 @@
+import { prisma } from "@/lib/prisma";
+import { EmployeesTable } from "@/components/EmployeesTable";
+
+export const dynamic = "force-dynamic";
+
+export default async function EmployeesPage() {
+  const employees = await prisma.employee.findMany({
+    include: { logs: { select: { accuracy: true, date: true } } },
+    orderBy: { name: "asc" },
+  });
+
+  const rows = employees.map((emp) => {
+    const logCount = emp.logs.length;
+    const avgAccuracy = logCount
+      ? Math.round(emp.logs.reduce((s, l) => s + l.accuracy, 0) / logCount)
+      : 0;
+    const lastActive = logCount
+      ? emp.logs.reduce((latest, l) => (l.date > latest ? l.date : latest), emp.logs[0].date)
+      : null;
+    return { id: emp.id, name: emp.name, logCount, avgAccuracy, lastActive };
+  });
+
+  return (
+    <div className="flex-1 p-8">
+      <div>
+        <h1 className="text-2xl font-semibold text-neutral-900">Employees</h1>
+        <p className="text-sm text-neutral-500">
+          Everyone logging activity on the farm.
+        </p>
+      </div>
+      <div className="mt-6">
+        <EmployeesTable employees={rows} />
+      </div>
+    </div>
+  );
+}
