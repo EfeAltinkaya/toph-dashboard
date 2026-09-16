@@ -105,7 +105,7 @@ export function Sidebar({
                       className={`flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm ${
                         active
                           ? "bg-black/5 text-neutral-900"
-                          : "text-neutral-500 hover:bg-black/5 hover:text-neutral-900"
+                          : "text-neutral-900 hover:bg-black/5"
                       }`}
                     >
                       <Icon size={16} className="shrink-0" />
@@ -128,7 +128,7 @@ export function Sidebar({
         <form action={logout}>
           <button
             type="submit"
-            className="flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left text-sm text-neutral-500 hover:bg-black/5 hover:text-neutral-900"
+            className="flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left text-sm text-neutral-900 hover:bg-black/5"
           >
             <LogOut size={16} />
             <span>Log Out</span>
