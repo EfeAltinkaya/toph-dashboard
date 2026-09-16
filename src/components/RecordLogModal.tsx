@@ -76,19 +76,22 @@ export function RecordLogModal({
         recognition.interimResults = true;
         recognition.lang = "en-US";
         recognition.onresult = (event) => {
+          // `event.results` is the full accumulated list for the whole
+          // continuous session, not just what's new since the last event —
+          // rebuilding from scratch each time (rather than appending to
+          // existing state) is what avoids re-appending already-finalized
+          // text on every subsequent result.
           let finalText = "";
-          const newConfidences: number[] = [];
+          const allConfidences: number[] = [];
           for (let i = 0; i < event.results.length; i++) {
             const result = event.results[i];
             if (result.isFinal) {
               finalText += result[0].transcript + " ";
-              newConfidences.push(result[0].confidence);
+              allConfidences.push(result[0].confidence);
             }
           }
-          if (finalText) {
-            setTranscript((prev) => (prev + " " + finalText).trim());
-            setConfidences((prev) => [...prev, ...newConfidences]);
-          }
+          setTranscript(finalText.trim());
+          setConfidences(allConfidences);
         };
         recognition.onerror = () => {
           /* mic hiccups shouldn't kill the recording */
