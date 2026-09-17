@@ -5,7 +5,9 @@ import { Loader2, Check } from "lucide-react";
 import { createLog } from "@/lib/log-actions";
 import { ACTIVITIES } from "@/lib/constants";
 import { FIELD_NAMES } from "@/lib/fields";
+import { APPLICATION_METHODS } from "@/lib/farm";
 import { APPROVED_PRODUCTS, TARGET_TERMS } from "@/lib/products";
+import { LocationCapture, type CapturedLocation } from "@/components/LocationCapture";
 import { extractLogFields } from "@/lib/extract";
 import { useI18n } from "@/i18n/I18nProvider";
 import { format, tr, type Dictionary } from "@/i18n";
@@ -77,7 +79,10 @@ export function WorkerTypePanel({
     rate: "",
     notes: "",
   });
+  const [location, setLocation] = useState<CapturedLocation>(null);
+  const [method, setMethod] = useState<string>(APPLICATION_METHODS[0]);
   const [isPending, startTransition] = useTransition();
+  const needsMethod = form.activity === "Spraying" || form.activity === "Soil work";
 
   function set<K extends keyof TypedFields>(key: K, value: string) {
     setForm((f) => ({ ...f, [key]: value }));
@@ -103,6 +108,8 @@ export function WorkerTypePanel({
         target,
         rate: form.rate.trim() || null,
         notes: form.notes.trim() || null,
+        method: needsMethod ? method : null,
+        location,
       });
       setForm((f) => ({ ...f, product: "", target: "", rate: "", notes: "" }));
       onSaved();
@@ -180,6 +187,19 @@ export function WorkerTypePanel({
           />
         </label>
 
+        {needsMethod && (
+          <label className="block">
+            <span className={LABEL}>{w.method}</span>
+            <select value={method} onChange={(e) => setMethod(e.target.value)} className={INPUT}>
+              {APPLICATION_METHODS.map((m) => (
+                <option key={m} value={m}>
+                  {tr(t.vocab.methods, m)}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+
         <label className="block sm:col-span-2">
           <span className={LABEL}>{t.fields.notes}</span>
           <textarea
@@ -190,6 +210,10 @@ export function WorkerTypePanel({
             className={INPUT}
           />
         </label>
+      </div>
+
+      <div className="mt-3">
+        <LocationCapture onCapture={setLocation} />
       </div>
 
       <button

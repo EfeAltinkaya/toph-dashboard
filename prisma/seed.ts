@@ -4,6 +4,7 @@ import { PrismaClient } from "../src/generated/prisma/client";
 import { FIELD_COORDS, FIELD_NAMES } from "../src/lib/fields";
 import { ACTIVITIES } from "../src/lib/constants";
 import { extractLogFields } from "../src/lib/extract";
+import { farmDayOffset, formatTime, startOfFarmDay } from "../src/lib/date-utils";
 
 // Run directly with tsx, so the env files have to be loaded by hand.
 dotenv.config({ path: [".env.local", ".env"] });
@@ -29,16 +30,6 @@ const EMPLOYEES = [
   "Chloe Thompson",
 ];
 
-function pad(n: number) {
-  return n.toString().padStart(2, "0");
-}
-
-function formatTime(hour: number, minute: number) {
-  const period = hour >= 12 ? "PM" : "AM";
-  const displayHour = hour % 12 === 0 ? 12 : hour % 12;
-  return `${displayHour}:${pad(minute)} ${period}`;
-}
-
 // What a worker actually said they applied. Spoken rates are deliberately
 // a mix of spelled-out and numeric so the seeded data exercises both paths
 // through the transcript parser (src/lib/extract.ts) rather than only the
@@ -51,6 +42,8 @@ type Application = {
   amountEs: string;
   unit: string;
   unitEs: string;
+  /** How it was put out. The state's use report is rejected without it. */
+  method: string;
 };
 
 const SPRAY_PLANS: Application[] = [
@@ -62,6 +55,7 @@ const SPRAY_PLANS: Application[] = [
     amountEs: "veinticuatro",
     unit: "ounces",
     unitEs: "onzas",
+    method: "Ground rig",
   },
   {
     product: "M-Pede",
@@ -71,6 +65,7 @@ const SPRAY_PLANS: Application[] = [
     amountEs: "2",
     unit: "gallons",
     unitEs: "galones",
+    method: "Airblast",
   },
   // Deliberately non-compliant: Regalia isn't labeled for aphids, so this
   // one fails a compliance check and shows up as something to follow up
@@ -83,6 +78,7 @@ const SPRAY_PLANS: Application[] = [
     amountEs: "uno",
     unit: "quarts",
     unitEs: "litros",
+    method: "Ground rig",
   },
   {
     product: "Entrust SC",
@@ -92,6 +88,7 @@ const SPRAY_PLANS: Application[] = [
     amountEs: "seis",
     unit: "ounces",
     unitEs: "onzas",
+    method: "Backpack",
   },
 ];
 
@@ -103,6 +100,7 @@ const SOIL_PLAN: Application = {
   amountEs: "doce",
   unit: "gallons",
   unitEs: "galones",
+  method: "Chemigation",
 };
 
 function applicationFor(activity: string, index: number): Application | null {
@@ -203,8 +201,11 @@ async function main() {
   );
 
   const fieldNames = FIELD_NAMES;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  // Farm-local midnight, not the seeding machine's: the times on a
+  // compliance record are the farm's wall clock, and the seed has to
+  // produce the same data whether it runs from California or from a
+  // laptop in another timezone.
+  const today = startOfFarmDay(new Date());
 
   let logIndex = 0;
   for (const employee of employees) {
@@ -213,15 +214,18 @@ async function main() {
       // Spread logs across the last several days so "Today" and "This Month"
       // stats reflect real, queryable data instead of hardcoded numbers.
       const daysAgo = logIndex < 5 ? 0 : logIndex % 9;
-      const date = new Date(today);
-      date.setDate(date.getDate() - daysAgo);
-
       const activity = ACTIVITIES[logIndex % ACTIVITIES.length];
       const field = fieldNames[logIndex % fieldNames.length];
       const startHour = 6 + (logIndex % 8);
       const durationHours = 2 + (logIndex % 3);
-      const startTime = formatTime(startHour, 0);
-      const endTime = formatTime(startHour + durationHours, (logIndex % 2) * 30);
+      // The timestamp and the displayed start time are the same moment,
+      // derived once, so a log can never read 6 AM while counting toward
+      // the previous day.
+      const date = new Date(farmDayOffset(today, -daysAgo).getTime() + startHour * 3600000);
+      const startTime = formatTime(date);
+      const endTime = formatTime(
+        new Date(date.getTime() + durationHours * 3600000 + (logIndex % 2) * 1800000)
+      );
       const accuracy = 84 + ((logIndex * 7) % 15); // 84-98
       const isSpanish = logIndex % 5 === 0;
       const application = applicationFor(activity, logIndex);
@@ -249,8 +253,25 @@ async function main() {
           product: extracted.product,
           target: extracted.target,
           rate: extracted.rate,
-          lat: FIELD_COORDS[field].lat,
-          lng: FIELD_COORDS[field].lng,
+          method: application ? application.method : null,
+          // Most logs carry a real GPS fix from the worker's phone, a few
+          // fall back to the block's coordinates (no signal, or location
+          // declined). The audit checklist is only interesting if the demo
+          // data contains something for it to catch.
+          ...(logIndex % 5 === 3
+            ? {
+                lat: FIELD_COORDS[field].lat,
+                lng: FIELD_COORDS[field].lng,
+                coordSource: "field",
+              }
+            : {
+                // A few hundred feet off the block's centre, which is what
+                // a phone in a field actually reports.
+                lat: FIELD_COORDS[field].lat + ((logIndex % 7) - 3) * 0.0003,
+                lng: FIELD_COORDS[field].lng + ((logIndex % 5) - 2) * 0.0004,
+                coordSource: "device",
+                gpsAccuracyM: 5 + (logIndex % 9),
+              }),
           tags:
             logIndex % 4 === 0
               ? { connect: [{ id: tags[logIndex % tags.length].id }] }

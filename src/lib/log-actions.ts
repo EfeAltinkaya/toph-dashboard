@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 import { coordsForField } from "@/lib/fields";
-import { formatTime, parseLocalDate } from "@/lib/date-utils";
+import { farmDayStart, formatTime } from "@/lib/date-utils";
 import { extractLogFields } from "@/lib/extract";
 
 async function requireUser() {
@@ -30,6 +30,12 @@ export async function createLog(input: {
   target?: string | null;
   rate?: string | null;
   notes?: string | null;
+  method?: string | null;
+  // A real GPS fix from the worker's device, when they allowed it. Absent
+  // means the log falls back to the block's known coordinates, and the
+  // record says which of the two it is rather than presenting both as
+  // measured.
+  location?: { lat: number; lng: number; accuracyM: number } | null;
 }) {
   await requireUser();
 
@@ -40,7 +46,9 @@ export async function createLog(input: {
   });
 
   const now = new Date();
-  const { lat, lng } = coordsForField(input.field);
+  const block = coordsForField(input.field);
+  const fix = input.location;
+  const { lat, lng } = fix ? { lat: fix.lat, lng: fix.lng } : block;
   const source = input.source ?? "voice";
   const extracted =
     source === "voice"
@@ -66,8 +74,11 @@ export async function createLog(input: {
       target: input.target ?? extracted.target,
       rate: input.rate ?? extracted.rate,
       notes: input.notes ?? null,
+      method: input.method ?? null,
       lat,
       lng,
+      coordSource: fix ? "device" : "field",
+      gpsAccuracyM: fix ? fix.accuracyM : null,
     },
   });
 
@@ -127,7 +138,7 @@ export async function updateLog(
       employeeId: employee.id,
       activity: input.activity,
       field: input.field,
-      date: parseLocalDate(input.date),
+      date: farmDayStart(input.date),
       startTime: input.startTime,
       endTime: input.endTime,
       lat,

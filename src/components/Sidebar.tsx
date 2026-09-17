@@ -7,6 +7,7 @@ import {
   AudioLines,
   Map as MapIcon,
   ShieldCheck,
+  ClipboardCheck,
   FileText,
   CalendarClock,
   Users,
@@ -37,6 +38,7 @@ const NAV_SECTIONS = [
     label: "compliance",
     items: [
       { label: "auditManager", href: "/audit-manager", icon: ShieldCheck },
+      { label: "records", href: "/records", icon: ClipboardCheck },
       { label: "reports", href: "/reports", icon: FileText },
       { label: "schedule", href: "/schedule", icon: CalendarClock },
     ],
@@ -75,7 +77,7 @@ export function Sidebar({
     .toUpperCase();
 
   return (
-    <aside className="flex h-screen w-64 shrink-0 flex-col justify-between border-r border-accent-200 bg-accent-50 px-3 py-4 text-surface">
+    <aside className="print-hide flex h-screen w-64 shrink-0 flex-col justify-between border-r border-accent-200 bg-accent-50 px-3 py-4 text-surface">
       <div>
         <Link
           href="/settings"

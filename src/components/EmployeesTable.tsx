@@ -6,6 +6,7 @@ import { addEmployee, renameEmployee, deleteEmployee } from "@/lib/employee-acti
 import { useI18n } from "@/i18n/I18nProvider";
 import { errorText, format } from "@/i18n";
 import { localeFor } from "@/i18n/config";
+import { FARM_TIME_ZONE } from "@/lib/date-utils";
 
 type EmployeeRow = {
   id: number;
@@ -19,6 +20,7 @@ export function EmployeesTable({ employees }: { employees: EmployeeRow[] }) {
   const { lang, t } = useI18n();
   const e = t.pages.employees;
   const dateFormatter = new Intl.DateTimeFormat(localeFor(lang), {
+    timeZone: FARM_TIME_ZONE,
     month: "short",
     day: "numeric",
     year: "numeric",

@@ -2,12 +2,14 @@ import { prisma } from "@/lib/prisma";
 import { getI18n } from "@/i18n/server";
 import { format, tr } from "@/i18n";
 import { localeFor } from "@/i18n/config";
+import { FARM_TIME_ZONE, farmDayKey } from "@/lib/date-utils";
 
 export const dynamic = "force-dynamic";
 
 export default async function SchedulePage() {
   const { lang, t } = await getI18n();
   const dateFormatter = new Intl.DateTimeFormat(localeFor(lang), {
+    timeZone: FARM_TIME_ZONE,
     weekday: "long",
     month: "long",
     day: "numeric",
@@ -21,7 +23,7 @@ export default async function SchedulePage() {
 
   const groups = new Map<string, typeof logs>();
   for (const log of logs) {
-    const key = log.date.toDateString();
+    const key = farmDayKey(log.date);
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key)!.push(log);
   }

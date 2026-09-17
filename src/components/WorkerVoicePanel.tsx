@@ -4,7 +4,9 @@ import { useState, useTransition } from "react";
 import { Mic, Square, Loader2, Camera, RotateCcw, Check } from "lucide-react";
 import { createLog } from "@/lib/log-actions";
 import { ACTIVITIES, LANGUAGES } from "@/lib/constants";
+import { APPLICATION_METHODS } from "@/lib/farm";
 import { FIELD_NAMES } from "@/lib/fields";
+import { LocationCapture, type CapturedLocation } from "@/components/LocationCapture";
 import { resizeImageFile } from "@/lib/image";
 import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
 import { useI18n } from "@/i18n/I18nProvider";
@@ -47,8 +49,13 @@ export function WorkerVoicePanel({
   // A worker who switched the app to Spanish almost certainly speaks it.
   const [language, setLanguage] = useState<string>(pageLang === "es" ? "es-ES" : LANGUAGES[0].code);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [location, setLocation] = useState<CapturedLocation>(null);
+  // Only the activities that put a product out need a method, and the
+  // state's report only asks about those.
+  const [method, setMethod] = useState<string>(APPLICATION_METHODS[0]);
   const [isPending, startTransition] = useTransition();
   const recorder = useVoiceRecorder();
+  const needsMethod = activity === "Spraying" || activity === "Soil work";
 
   async function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -69,6 +76,8 @@ export function WorkerVoicePanel({
         language,
         accuracy: recorder.accuracy,
         source: "voice",
+        method: needsMethod ? method : null,
+        location,
       });
       recorder.reset();
       setPhotoUrl(null);
@@ -126,6 +135,28 @@ export function WorkerVoicePanel({
             ))}
           </select>
         </label>
+      </div>
+
+      {needsMethod && (
+        <label className="mt-3 block max-w-xs">
+          <span className={LABEL}>{w.method}</span>
+          <select
+            value={method}
+            onChange={(e) => setMethod(e.target.value)}
+            disabled={recorder.phase === "recording"}
+            className={SELECT}
+          >
+            {APPLICATION_METHODS.map((m) => (
+              <option key={m} value={m}>
+                {tr(t.vocab.methods, m)}
+              </option>
+            ))}
+          </select>
+        </label>
+      )}
+
+      <div className="mt-3">
+        <LocationCapture onCapture={setLocation} />
       </div>
 
       <div className="mt-5 rounded-2xl border border-accent-200 bg-accent-25 p-5">

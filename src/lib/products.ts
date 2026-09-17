@@ -12,6 +12,12 @@
 export type ApprovedProduct = {
   name: string;
   kind: "Fungicide" | "Insecticide" | "Herbicide" | "Fertilizer";
+  /**
+   * EPA registration number, which is what a filed use report is matched
+   * against: a report carrying a number the state doesn't recognise is
+   * rejected. Fertilizers aren't pesticides and carry none.
+   */
+  epaRegNo: string | null;
   /** Labeled targets, lowercase canonical English terms (see TARGET_TERMS). */
   targets: string[];
   /** Restricted-entry interval, in hours. */
@@ -22,30 +28,35 @@ export const APPROVED_PRODUCTS: ApprovedProduct[] = [
   {
     name: "Serenade ASO",
     kind: "Fungicide",
+    epaRegNo: "69592-12",
     targets: ["powdery mildew", "fire blight", "bacterial spot", "aphids"],
     reiHours: 4,
   },
   {
     name: "Regalia",
     kind: "Fungicide",
+    epaRegNo: "84059-3",
     targets: ["powdery mildew", "botrytis"],
     reiHours: 4,
   },
   {
     name: "M-Pede",
     kind: "Insecticide",
+    epaRegNo: "53219-6",
     targets: ["aphids", "mites", "whiteflies", "thrips"],
     reiHours: 12,
   },
   {
     name: "Entrust SC",
     kind: "Insecticide",
+    epaRegNo: "62719-621",
     targets: ["thrips", "worms", "leafminers"],
     reiHours: 4,
   },
   {
     name: "CAN-17",
     kind: "Fertilizer",
+    epaRegNo: null,
     targets: [],
     reiHours: 0,
   },

@@ -16,6 +16,7 @@ import { useI18n } from "@/i18n/I18nProvider";
 import { format, errorText, tr } from "@/i18n";
 import { localeFor } from "@/i18n/config";
 import type { LogWithRelations, TagOption } from "@/lib/types";
+import { FARM_TIME_ZONE } from "@/lib/date-utils";
 
 const GRID_COLS = "grid-cols-[24px_1.6fr_1.2fr_1.3fr_0.9fr_1.4fr_1fr]";
 
@@ -38,6 +39,7 @@ export function LogRow({
 }) {
   const { lang, t } = useI18n();
   const dateFormatter = new Intl.DateTimeFormat(localeFor(lang), {
+    timeZone: FARM_TIME_ZONE,
     month: "long",
     day: "numeric",
     year: "numeric",

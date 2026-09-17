@@ -13,6 +13,7 @@ import { useI18n } from "@/i18n/I18nProvider";
 import { format, tr } from "@/i18n";
 import { localeFor } from "@/i18n/config";
 import type { LogWithRelations } from "@/lib/types";
+import { FARM_TIME_ZONE, farmDayKey } from "@/lib/date-utils";
 
 const TABS = [
   { id: "voice", icon: Mic },
@@ -22,13 +23,10 @@ const TABS = [
 
 type TabId = (typeof TABS)[number]["id"];
 
+// The farm's day, not the device's: a worker whose phone is on the wrong
+// timezone should still see today's work under Today.
 function isToday(date: Date) {
-  const now = new Date();
-  return (
-    date.getFullYear() === now.getFullYear() &&
-    date.getMonth() === now.getMonth() &&
-    date.getDate() === now.getDate()
-  );
+  return farmDayKey(date) === farmDayKey(new Date());
 }
 
 function LogsTimeline({ logs }: { logs: LogWithRelations[] }) {
@@ -36,7 +34,8 @@ function LogsTimeline({ logs }: { logs: LogWithRelations[] }) {
   const w = t.worker;
   const [scope, setScope] = useState<"today" | "all">("today");
   const [openId, setOpenId] = useState<number | null>(null);
-  const dateFormatter = new Intl.DateTimeFormat(localeFor(lang), { month: "short", day: "numeric" });
+  const dateFormatter = new Intl.DateTimeFormat(localeFor(lang), {
+    timeZone: FARM_TIME_ZONE, month: "short", day: "numeric" });
 
   const todayLogs = logs.filter((l) => isToday(new Date(l.date)));
   const shown = scope === "today" ? todayLogs : logs;

@@ -5,6 +5,7 @@ import { Send } from "lucide-react";
 import { postMessage } from "@/lib/message-actions";
 import { useI18n } from "@/i18n/I18nProvider";
 import { localeFor } from "@/i18n/config";
+import { FARM_TIME_ZONE } from "@/lib/date-utils";
 
 type MessageRow = { id: number; body: string; createdAt: Date; author: { name: string } };
 
@@ -12,6 +13,7 @@ export function MessageBoard({ messages }: { messages: MessageRow[] }) {
   const { lang, t } = useI18n();
   const m = t.pages.messages;
   const timeFormatter = new Intl.DateTimeFormat(localeFor(lang), {
+    timeZone: FARM_TIME_ZONE,
     month: "short",
     day: "numeric",
     hour: "numeric",

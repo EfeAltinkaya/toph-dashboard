@@ -123,6 +123,20 @@ model EmployeeLog {
   source     String  @default("voice")
   lat        Float
   lng        Float
+  // Where lat/lng came from: "device" means the worker's browser handed
+  // over a real GPS fix at the moment they filed the log, "field" means
+  // it fell back to the block's known coordinates. An auditor cares about
+  // the difference, so the record states which it is rather than showing
+  // every pin as though it were measured.
+  coordSource String  @default("field")
+  // Application method (ground rig, airblast, backpack, chemigation).
+  // California's use report is rejected outright without it, so it's
+  // captured at the source instead of reconstructed later. Null for
+  // activities that apply nothing.
+  method     String?
+  // Radius of the GPS fix in metres, as reported by the device. Null when
+  // no fix was captured.
+  gpsAccuracyM Float?
   tags       Tag[]
   createdAt  DateTime @default(now())
 }

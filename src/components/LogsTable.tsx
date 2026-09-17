@@ -15,6 +15,7 @@ import { RecordLogModal } from "@/components/RecordLogModal";
 import { useI18n } from "@/i18n/I18nProvider";
 import { tr } from "@/i18n";
 import type { LogWithRelations, TagOption } from "@/lib/types";
+import { farmMonthKey } from "@/lib/date-utils";
 
 type DateRange = "all" | "week" | "month";
 
@@ -55,11 +56,11 @@ export function LogsTable({
     let rows = logs;
 
     if (dateRange === "month") {
-      rows = rows.filter(
-        (l) =>
-          l.date.getMonth() === now.getMonth() &&
-          l.date.getFullYear() === now.getFullYear()
-      );
+      // The farm's month. Comparing with the viewer's own clock would put a
+      // log filed on the last evening of the month into the next one for
+      // anyone reading the dashboard from a timezone ahead of California.
+      const thisMonth = farmMonthKey(now);
+      rows = rows.filter((l) => farmMonthKey(l.date) === thisMonth);
     } else if (dateRange === "week") {
       const weekAgo = new Date(now);
       weekAgo.setDate(now.getDate() - 7);

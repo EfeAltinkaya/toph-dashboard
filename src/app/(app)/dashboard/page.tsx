@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { farmDayOffset, startOfFarmDay } from "@/lib/date-utils";
 import { DashboardBody } from "@/components/DashboardBody";
 
 // Dashboard reflects live database state (recordings logged today, tags
@@ -15,10 +16,12 @@ export default async function DashboardPage() {
     prisma.tag.findMany({ orderBy: { name: "asc" } }),
   ]);
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const tomorrow = new Date(today);
-  tomorrow.setDate(tomorrow.getDate() + 1);
+  // "Today" is the farm's day, not the server's: this code runs in UTC, so
+  // anything logged after 5 PM in California would otherwise count toward
+  // tomorrow.
+  const now = new Date();
+  const today = startOfFarmDay(now);
+  const tomorrow = farmDayOffset(now, 1);
 
   const todaysLogs = logs.filter((l) => l.date >= today && l.date < tomorrow);
   const activeWorkers = new Set(logs.map((l) => l.employee.id)).size;

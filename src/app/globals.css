@@ -195,3 +195,47 @@ body {
     opacity: 0;
   }
 }
+
+/* Printing the use report. A farm hands an auditor paper (or a PDF made
+   from this), so the report has to come off the screen as a document:
+   navigation, filters and buttons gone, letterhead and signature block
+   in, and rows that don't get sliced in half across a page break. */
+@media print {
+  .print-hide {
+    display: none !important;
+  }
+  .print-only {
+    display: revert !important;
+  }
+  /* Themes are for working in the app; a filed document is black on white. */
+  :root {
+    --surface-base: #ffffff;
+    --surface-text: #000000;
+  }
+  body {
+    background: #ffffff;
+  }
+  .print-sheet {
+    padding: 0 !important;
+  }
+  .print-plain {
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: #ffffff !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+  table {
+    font-size: 9pt;
+  }
+  thead {
+    display: table-header-group;
+  }
+  tr,
+  li {
+    break-inside: avoid;
+  }
+  @page {
+    margin: 12mm;
+  }
+}
