@@ -9,6 +9,7 @@ export type LogWithRelations = {
   isNew: boolean;
   accuracy: number;
   audioUrl: string;
+  photoUrl: string | null;
   transcript: string;
   lat: number;
   lng: number;

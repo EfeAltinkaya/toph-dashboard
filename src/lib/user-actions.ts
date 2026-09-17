@@ -15,6 +15,7 @@ export async function updateProfile(
 
   const name = (formData.get("name") as string).trim();
   const email = (formData.get("email") as string).trim();
+  const avatarUrl = (formData.get("avatarUrl") as string) || null;
   if (!name || !email) return { error: "Name and email are required." };
 
   const existing = await prisma.user.findUnique({ where: { email } });
@@ -22,7 +23,7 @@ export async function updateProfile(
     return { error: "That email is already in use." };
   }
 
-  await prisma.user.update({ where: { id: user.id }, data: { name, email } });
+  await prisma.user.update({ where: { id: user.id }, data: { name, email, avatarUrl } });
   revalidatePath("/", "layout");
   return { success: true };
 }

@@ -108,7 +108,7 @@ export function LogsTable({
         <button
           type="button"
           onClick={() => setRecordOpen(true)}
-          className="flex items-center gap-1.5 rounded-full bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800"
+          className="flex items-center gap-1.5 rounded-full bg-accent px-4 py-2 text-sm font-medium text-white hover:opacity-90"
         >
           <Mic size={14} />
           New Log

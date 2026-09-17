@@ -19,7 +19,7 @@ function Bar({
       </div>
       <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-neutral-100">
         <div
-          className="h-full rounded-full bg-neutral-900"
+          className="h-full rounded-full bg-accent"
           style={{ width: `${(count / max) * 100}%` }}
         />
       </div>

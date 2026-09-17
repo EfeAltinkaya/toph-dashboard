@@ -18,7 +18,7 @@ export default async function AppLayout({
 
   return (
     <div className="flex min-h-screen">
-      <Sidebar user={{ name: user.name }} newLogCount={newLogCount} />
+      <Sidebar user={{ name: user.name, avatarUrl: user.avatarUrl }} newLogCount={newLogCount} />
       <div className="flex-1">{children}</div>
     </div>
   );

@@ -15,6 +15,7 @@ model User {
   name         String
   email        String   @unique
   passwordHash String
+  avatarUrl    String?
   createdAt    DateTime @default(now())
   sessions     Session[]
   messages     Message[]
@@ -60,6 +61,7 @@ model EmployeeLog {
   isNew      Boolean  @default(true)
   accuracy   Int
   audioUrl   String
+  photoUrl   String?
   transcript String
   lat        Float
   lng        Float

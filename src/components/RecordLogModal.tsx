@@ -1,10 +1,11 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import { Mic, Square, X, Loader2 } from "lucide-react";
+import { Mic, Square, X, Loader2, Camera } from "lucide-react";
 import { createLog } from "@/lib/log-actions";
 import { ACTIVITIES } from "@/lib/constants";
 import { FIELD_NAMES } from "@/lib/fields";
+import { resizeImageFile } from "@/lib/image";
 
 type Phase = "idle" | "recording" | "stopped" | "saving";
 
@@ -31,6 +32,7 @@ export function RecordLogModal({
   const [transcript, setTranscript] = useState("");
   const [confidences, setConfidences] = useState<number[]>([]);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   // Lazy initializer only runs in the browser render pass, so this is safe
@@ -115,6 +117,12 @@ export function RecordLogModal({
     setPhase("stopped");
   }
 
+  async function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setPhotoUrl(await resizeImageFile(file, 1024, 0.8));
+  }
+
   function handleSave() {
     if (!audioUrl) return;
     const avgConfidence = confidences.length
@@ -129,6 +137,7 @@ export function RecordLogModal({
         field,
         transcript,
         audioUrl,
+        photoUrl,
         accuracy: avgConfidence * 100,
       });
       onClose();
@@ -211,7 +220,7 @@ export function RecordLogModal({
             <button
               type="button"
               onClick={startRecording}
-              className="flex w-full items-center justify-center gap-2 rounded-full bg-neutral-900 py-2.5 text-sm font-medium text-white hover:bg-neutral-800"
+              className="flex w-full items-center justify-center gap-2 rounded-full bg-accent py-2.5 text-sm font-medium text-white hover:opacity-90"
             >
               <Mic size={16} /> Start Recording
             </button>
@@ -250,11 +259,37 @@ export function RecordLogModal({
                 className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
                 placeholder="What happened in this log?"
               />
+
+              <label className="mt-3 block text-xs font-medium text-neutral-500">
+                Photo (optional)
+              </label>
+              <div className="mt-1 flex items-center gap-3">
+                {photoUrl && (
+                  // eslint-disable-next-line @next/next/no-img-element -- data URL, not an optimizable remote image
+                  <img
+                    src={photoUrl}
+                    alt=""
+                    className="h-14 w-14 rounded-lg object-cover"
+                  />
+                )}
+                <label className="flex cursor-pointer items-center gap-1.5 rounded-full border border-neutral-300 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-50">
+                  <Camera size={13} />
+                  {photoUrl ? "Retake" : "Add Photo"}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    onChange={handlePhotoChange}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+
               <button
                 type="button"
                 disabled={isPending}
                 onClick={handleSave}
-                className="mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-neutral-900 py-2.5 text-sm font-medium text-white hover:bg-neutral-800 disabled:opacity-60"
+                className="mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-accent py-2.5 text-sm font-medium text-white hover:opacity-90 disabled:opacity-60"
               >
                 {isPending ? <Loader2 size={14} className="animate-spin" /> : null}
                 {isPending ? "Saving..." : "Save Log"}

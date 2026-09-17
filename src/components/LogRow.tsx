@@ -1,14 +1,15 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Maximize2, Pencil, Trash2, X, Check } from "lucide-react";
+import { Maximize2, Pencil, Trash2, X, Check, Camera } from "lucide-react";
 import { AudioPlayer } from "@/components/AudioPlayer";
 import { TagPicker } from "@/components/TagPicker";
 import { FieldMap } from "@/components/FieldMap";
 import { markLogViewed } from "@/app/actions";
-import { updateLog, deleteLog } from "@/lib/log-actions";
+import { updateLog, deleteLog, setLogPhoto } from "@/lib/log-actions";
 import { ACTIVITIES } from "@/lib/constants";
 import { FIELD_NAMES } from "@/lib/fields";
+import { resizeImageFile } from "@/lib/image";
 import type { LogWithRelations, TagOption } from "@/lib/types";
 
 const GRID_COLS = "grid-cols-[24px_1.6fr_1.2fr_1.3fr_0.9fr_1.4fr_1fr]";
@@ -72,6 +73,15 @@ export function LogRow({
     });
   }
 
+  async function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const dataUrl = await resizeImageFile(file, 1024, 0.8);
+    startTransition(() => {
+      setLogPhoto(log.id, dataUrl);
+    });
+  }
+
   if (editing) {
     return (
       <div className="grid grid-cols-1 gap-2 border-b border-neutral-100 bg-amber-50/40 px-4 py-3 last:border-b-0 sm:grid-cols-6 sm:items-center sm:gap-3">
@@ -129,7 +139,7 @@ export function LogRow({
             type="button"
             disabled={isPending}
             onClick={saveEdit}
-            className="flex items-center gap-1 rounded-full bg-neutral-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-neutral-800 disabled:opacity-60"
+            className="flex items-center gap-1 rounded-full bg-accent px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 disabled:opacity-60"
           >
             <Check size={12} /> Save
           </button>
@@ -216,6 +226,29 @@ export function LogRow({
             <div className="mt-4">
               <div className="text-xs font-semibold text-neutral-500">Summary</div>
               <p className="mt-1 text-sm text-neutral-600">&ldquo;{log.transcript}&rdquo;</p>
+            </div>
+
+            <div className="mt-4">
+              <div className="text-xs font-semibold text-neutral-500">Photo</div>
+              {log.photoUrl && (
+                // eslint-disable-next-line @next/next/no-img-element -- data URL, not an optimizable remote image
+                <img
+                  src={log.photoUrl}
+                  alt=""
+                  className="mt-1 h-32 w-full rounded-lg object-cover"
+                />
+              )}
+              <label className="mt-2 flex w-fit cursor-pointer items-center gap-1.5 rounded-full border border-neutral-300 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-50">
+                <Camera size={13} />
+                {log.photoUrl ? "Replace Photo" : "Add Photo"}
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={handlePhotoChange}
+                  className="hidden"
+                />
+              </label>
             </div>
           </div>
 

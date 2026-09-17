@@ -57,7 +57,7 @@ export function Sidebar({
   user,
   newLogCount,
 }: {
-  user: { name: string };
+  user: { name: string; avatarUrl?: string | null };
   newLogCount: number;
 }) {
   const pathname = usePathname();
@@ -75,8 +75,13 @@ export function Sidebar({
           href="/settings"
           className="flex items-center gap-2 rounded-lg px-2 py-2 hover:bg-black/5"
         >
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-neutral-300 text-sm font-semibold text-neutral-700">
-            {initials || "U"}
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-neutral-300 text-sm font-semibold text-neutral-700">
+            {user.avatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element -- data URL, not an optimizable remote image
+              <img src={user.avatarUrl} alt="" className="h-full w-full object-cover" />
+            ) : (
+              initials || "U"
+            )}
           </div>
           <div className="min-w-0 flex-1">
             <div className="truncate text-sm font-semibold text-neutral-900">

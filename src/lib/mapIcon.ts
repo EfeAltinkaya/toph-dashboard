@@ -21,3 +21,20 @@ export function createPersonPin() {
     popupAnchor: [0, -34],
   });
 }
+
+// "You are here": a pulsing dot, visually distinct from the field pins,
+// for the real browser-geolocation marker.
+const LIVE_DOT_HTML = `
+<div style="position:relative;width:20px;height:20px">
+  <div style="position:absolute;inset:0;border-radius:9999px;background:#2563eb;opacity:0.35;animation:toph-pulse 1.8s ease-out infinite"></div>
+  <div style="position:absolute;top:5px;left:5px;width:10px;height:10px;border-radius:9999px;background:#2563eb;border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.5)"></div>
+</div>`.trim();
+
+export function createLiveLocationPin() {
+  return divIcon({
+    className: "",
+    html: LIVE_DOT_HTML,
+    iconSize: [20, 20],
+    iconAnchor: [10, 10],
+  });
+}

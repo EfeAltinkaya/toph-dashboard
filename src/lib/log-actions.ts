@@ -21,6 +21,7 @@ export async function createLog(input: {
   field: string;
   transcript: string;
   audioUrl: string;
+  photoUrl?: string | null;
   accuracy: number;
 }) {
   await requireUser();
@@ -45,12 +46,19 @@ export async function createLog(input: {
       isNew: false,
       accuracy: Math.round(input.accuracy),
       audioUrl: input.audioUrl,
+      photoUrl: input.photoUrl || null,
       transcript: input.transcript || "(no transcript captured)",
       lat,
       lng,
     },
   });
 
+  revalidatePath("/", "layout");
+}
+
+export async function setLogPhoto(id: number, photoUrl: string | null) {
+  await requireUser();
+  await prisma.employeeLog.update({ where: { id }, data: { photoUrl } });
   revalidatePath("/", "layout");
 }
 

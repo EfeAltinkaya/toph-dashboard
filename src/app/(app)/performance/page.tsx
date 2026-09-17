@@ -40,7 +40,7 @@ export default async function PerformancePage() {
             </div>
             <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-neutral-100">
               <div
-                className="h-full rounded-full bg-neutral-900"
+                className="h-full rounded-full bg-accent"
                 style={{ width: `${(row.logCount / maxLogs) * 100}%` }}
               />
             </div>

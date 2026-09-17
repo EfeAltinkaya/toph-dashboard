@@ -52,7 +52,7 @@ export function EmployeesTable({ employees }: { employees: EmployeeRow[] }) {
           <button
             type="button"
             onClick={() => setAdding(true)}
-            className="flex items-center gap-1.5 rounded-full bg-neutral-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-neutral-800"
+            className="flex items-center gap-1.5 rounded-full bg-accent px-3 py-1.5 text-xs font-medium text-white hover:opacity-90"
           >
             <UserPlus size={13} /> Add Employee
           </button>
@@ -70,7 +70,7 @@ export function EmployeesTable({ employees }: { employees: EmployeeRow[] }) {
               type="button"
               disabled={isPending}
               onClick={submitAdd}
-              className="rounded-full bg-neutral-900 p-1.5 text-white"
+              className="rounded-full bg-accent p-1.5 text-white"
             >
               <Check size={13} />
             </button>
@@ -123,7 +123,7 @@ export function EmployeesTable({ employees }: { employees: EmployeeRow[] }) {
                   type="button"
                   disabled={isPending}
                   onClick={() => submitRename(emp.id)}
-                  className="rounded-full bg-neutral-900 p-1.5 text-white"
+                  className="rounded-full bg-accent p-1.5 text-white"
                 >
                   <Check size={13} />
                 </button>
