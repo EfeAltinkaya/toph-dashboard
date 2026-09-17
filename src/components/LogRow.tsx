@@ -5,6 +5,7 @@ import { Maximize2, Pencil, Trash2, X, Check, Camera, Languages, Loader2 } from 
 import { AudioPlayer } from "@/components/AudioPlayer";
 import { TagPicker } from "@/components/TagPicker";
 import { FieldMap } from "@/components/FieldMap";
+import { ExtractedLogPanel } from "@/components/ExtractedLogPanel";
 import { markLogViewed } from "@/app/actions";
 import { updateLog, deleteLog, setLogPhoto } from "@/lib/log-actions";
 import { translateLog } from "@/lib/translate-actions";
@@ -229,9 +230,18 @@ export function LogRow({
       </div>
 
       {expanded && (
-        <div className="grid grid-cols-1 gap-4 border-t border-neutral-100 bg-neutral-50/60 p-4 sm:grid-cols-2">
+        <div className="border-t border-neutral-100 bg-neutral-50/60 p-4">
+          <ExtractedLogPanel log={log} editable />
+
+          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <AudioPlayer audioUrl={log.audioUrl} seed={log.id} />
+            {log.audioUrl ? (
+              <AudioPlayer audioUrl={log.audioUrl} seed={log.id} />
+            ) : (
+              <div className="rounded-xl border border-neutral-200 bg-white px-4 py-3 text-xs text-neutral-500">
+                Typed entry — no recording attached.
+              </div>
+            )}
             <div className="mt-2">
               <TagPicker
                 logId={log.id}
@@ -293,7 +303,7 @@ export function LogRow({
                 <img
                   src={log.photoUrl}
                   alt=""
-                  className="mt-1 h-32 w-full rounded-lg object-cover"
+                  className="mt-1 h-64 w-full rounded-lg object-cover sm:h-80"
                 />
               )}
               <label className="mt-2 flex w-fit cursor-pointer items-center gap-1.5 rounded-full border border-neutral-300 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-50">
@@ -327,6 +337,7 @@ export function LogRow({
               <Maximize2 size={12} />
               Expand Map
             </button>
+          </div>
           </div>
         </div>
       )}

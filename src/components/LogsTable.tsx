@@ -122,10 +122,10 @@ export function LogsTable({
         />
       )}
 
-      <div className="mt-4 rounded-2xl border border-neutral-200 bg-white">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-neutral-100 px-4 py-3">
-          <div className="flex items-center gap-1.5 text-sm font-semibold text-neutral-900">
-            <AudioLines size={15} />
+      <div className="mt-4 rounded-2xl border border-accent-200 bg-white">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-t-2xl border-b border-accent-200 bg-accent-25 px-4 py-3">
+          <div className="flex items-center gap-1.5 text-sm font-semibold text-surface">
+            <AudioLines size={15} className="text-accent" />
             {title} ({filtered.length})
           </div>
 

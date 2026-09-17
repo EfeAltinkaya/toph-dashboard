@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Fraunces, IBM_Plex_Mono } from "next/font/google";
 import { ThemeInit } from "@/components/ThemeInit";
 import "./globals.css";
 
@@ -13,6 +13,22 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+// Marketing-page-only typefaces (the dashboard app keeps Geist throughout).
+// Fraunces is a display serif with real optical-size and italic character,
+// used sparingly for headlines; Plex Mono carries nav labels and eyebrows,
+// a quiet nod to Furrow's own monospace wordmark without copying it.
+const fraunces = Fraunces({
+  variable: "--font-fraunces",
+  subsets: ["latin"],
+  axes: ["opsz", "SOFT", "WONK"],
+});
+
+const plexMono = IBM_Plex_Mono({
+  variable: "--font-plex-mono",
+  subsets: ["latin"],
+  weight: ["400", "500"],
+});
+
 export const metadata: Metadata = {
   title: "Toph — Dashboard",
   description: "Farm activity dashboard for Toph.",
@@ -22,7 +38,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} ${plexMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-neutral-50 text-neutral-900">
         <ThemeInit />

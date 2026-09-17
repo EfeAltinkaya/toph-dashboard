@@ -41,9 +41,9 @@ function Card({
   note?: string;
 }) {
   return (
-    <div className="rounded-2xl border border-neutral-200 bg-white p-4">
+    <div className="rounded-2xl border border-accent-200 bg-white p-4">
       <div className="flex items-center gap-1.5 text-xs text-neutral-500">
-        {icon}
+        <span className="text-accent">{icon}</span>
         <span>{label}</span>
       </div>
       <div className="mt-2 flex items-center gap-2">

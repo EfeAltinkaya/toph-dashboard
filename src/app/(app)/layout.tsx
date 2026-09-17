@@ -13,11 +13,12 @@ export default async function AppLayout({
 }) {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
+  if (user.role === "worker") redirect("/log");
 
   const newLogCount = await prisma.employeeLog.count({ where: { isNew: true } });
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen bg-accent-25">
       <Sidebar user={{ name: user.name, avatarUrl: user.avatarUrl }} newLogCount={newLogCount} />
       <div className="flex-1">{children}</div>
     </div>

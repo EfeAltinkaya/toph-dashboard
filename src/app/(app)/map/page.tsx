@@ -13,8 +13,8 @@ export default async function MapPage() {
   return (
     <div className="flex h-screen flex-1 flex-col p-8">
       <div>
-        <h1 className="text-2xl font-semibold text-neutral-900">Map</h1>
-        <p className="text-sm text-neutral-500">
+        <h1 className="text-2xl font-semibold text-surface">Map</h1>
+        <p className="text-sm text-surface/60">
           Every field being tracked, with how much logged activity each has.
         </p>
       </div>

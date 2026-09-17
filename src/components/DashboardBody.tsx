@@ -1,5 +1,6 @@
 import { StatCards } from "@/components/StatCards";
 import { LogsTable } from "@/components/LogsTable";
+import { LiveRefresh } from "@/components/LiveRefresh";
 import type { LogWithRelations, TagOption } from "@/lib/types";
 
 export function DashboardBody({
@@ -18,11 +19,14 @@ export function DashboardBody({
 }) {
   return (
     <div className="flex-1 p-8">
-      <div>
-        <h1 className="text-2xl font-semibold text-neutral-900">Dashboard</h1>
-        <p className="text-sm text-neutral-500">
-          An overview of your farm and employee activity
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-surface">Dashboard</h1>
+          <p className="text-sm text-surface/60">
+            An overview of your farm and employee activity
+          </p>
+        </div>
+        <LiveRefresh />
       </div>
 
       <div className="mt-6">

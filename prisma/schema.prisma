@@ -16,9 +16,24 @@ model User {
   email        String   @unique
   passwordHash String
   avatarUrl    String?
+  // "manager" gets the full dashboard; "worker" gets a single log-activity
+  // screen and nothing else — matches the real Toph/Furrow product's
+  // role split, and lets someone join as a worker without being able to
+  // see or touch anyone else's data.
+  role         String   @default("manager")
   createdAt    DateTime @default(now())
   sessions     Session[]
   messages     Message[]
+}
+
+// A farm is just a join code gate in this build (there's one real farm in
+// the demo data) — a worker signing up types this code to prove they
+// belong, rather than anyone being able to self-enroll as an employee.
+model Farm {
+  id        Int      @id @default(autoincrement())
+  name      String
+  joinCode  String   @unique
+  createdAt DateTime @default(now())
 }
 
 model Session {
@@ -62,6 +77,19 @@ model Message {
   createdAt DateTime @default(now())
 }
 
+// Submissions from the public "Request a Briefing" form on the marketing
+// site — a genuine write to the database, not a fake form that goes nowhere.
+model BriefingRequest {
+  id             Int      @id @default(autoincrement())
+  firstName      String
+  lastName       String
+  email          String
+  company        String
+  responsibility String
+  context        String
+  createdAt      DateTime @default(now())
+}
+
 model EmployeeLog {
   id         Int      @id @default(autoincrement())
   employee   Employee @relation(fields: [employeeId], references: [id])
@@ -78,6 +106,17 @@ model EmployeeLog {
   transcript String
   language   String  @default("en-US")
   translated String?
+  // Structured fields pulled out of the spoken transcript (see
+  // src/lib/extract.ts) or typed in directly on the worker's Type tab.
+  // Nullable because a log can be valid without a product application —
+  // scouting or pruning has nothing to record here.
+  product    String?
+  target     String?
+  rate       String?
+  notes      String?
+  // "voice" or "typed" — the extraction panel says which one it was, since
+  // a typed entry is the worker's own words and a voice one is parsed.
+  source     String  @default("voice")
   lat        Float
   lng        Float
   tags       Tag[]

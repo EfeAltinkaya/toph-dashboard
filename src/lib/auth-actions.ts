@@ -14,27 +14,38 @@ export async function signup(
   formData: FormData
 ): Promise<AuthFormState> {
   const parsed = SignupSchema.safeParse({
+    role: formData.get("role"),
     name: formData.get("name"),
     email: formData.get("email"),
     password: formData.get("password"),
+    joinCode: formData.get("joinCode"),
   });
   if (!parsed.success) {
     return { error: parsed.error.issues[0].message };
   }
-  const { name, email, password } = parsed.data;
+  const { role, name, email, password } = parsed.data;
 
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
     return { error: "An account with that email already exists." };
   }
 
+  if (role === "worker") {
+    const farm = await prisma.farm.findUnique({
+      where: { joinCode: parsed.data.joinCode.trim().toUpperCase() },
+    });
+    if (!farm) {
+      return { error: "That join code doesn't match a farm. Check with your manager." };
+    }
+  }
+
   const passwordHash = await bcrypt.hash(password, 10);
   const user = await prisma.user.create({
-    data: { name, email, passwordHash },
+    data: { name, email, passwordHash, role },
   });
 
   await createSession(user.id);
-  redirect("/dashboard");
+  redirect(role === "worker" ? "/log" : "/dashboard");
 }
 
 export async function login(
@@ -63,7 +74,7 @@ export async function login(
   }
 
   await createSession(user.id);
-  redirect("/dashboard");
+  redirect(user.role === "worker" ? "/log" : "/dashboard");
 }
 
 export async function logout() {

@@ -1,122 +1,32 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { Mic, Square, X, Loader2, Camera } from "lucide-react";
 import { createLog } from "@/lib/log-actions";
 import { ACTIVITIES, LANGUAGES } from "@/lib/constants";
 import { FIELD_NAMES } from "@/lib/fields";
 import { resizeImageFile } from "@/lib/image";
-
-type Phase = "idle" | "recording" | "stopped" | "saving";
-
-function blobToDataUrl(blob: Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
-  });
-}
+import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
 
 export function RecordLogModal({
   employeeNames,
   onClose,
+  lockedEmployeeName,
 }: {
   employeeNames: string[];
   onClose: () => void;
+  // When set (the worker-only logging flow), the log is always attributed
+  // to this name and the employee picker is hidden — a worker can log
+  // their own activity, not anyone else's.
+  lockedEmployeeName?: string;
 }) {
-  const [phase, setPhase] = useState<Phase>("idle");
-  const [employeeName, setEmployeeName] = useState(employeeNames[0] ?? "");
+  const [employeeName, setEmployeeName] = useState(lockedEmployeeName ?? employeeNames[0] ?? "");
   const [activity, setActivity] = useState<string>(ACTIVITIES[0]);
   const [field, setField] = useState(FIELD_NAMES[0]);
   const [language, setLanguage] = useState<string>(LANGUAGES[0].code);
-  const [transcript, setTranscript] = useState("");
-  const [confidences, setConfidences] = useState<number[]>([]);
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
-  // Lazy initializer only runs in the browser render pass, so this is safe
-  // even though the component also renders once on the server (where
-  // `window` has no SpeechRecognition constructors at all).
-  const [speechSupported] = useState(
-    () => typeof window !== "undefined" && !!(window.SpeechRecognition ?? window.webkitSpeechRecognition)
-  );
-
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
-  const streamRef = useRef<MediaStream | null>(null);
-
-  async function startRecording() {
-    setError(null);
-    setTranscript("");
-    setConfidences([]);
-    setAudioUrl(null);
-
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      streamRef.current = stream;
-
-      const recorder = new MediaRecorder(stream);
-      chunksRef.current = [];
-      recorder.ondataavailable = (e) => {
-        if (e.data.size > 0) chunksRef.current.push(e.data);
-      };
-      recorder.onstop = async () => {
-        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
-        const dataUrl = await blobToDataUrl(blob);
-        setAudioUrl(dataUrl);
-      };
-      mediaRecorderRef.current = recorder;
-      recorder.start();
-
-      const SpeechRecognitionCtor =
-        window.SpeechRecognition ?? window.webkitSpeechRecognition;
-      if (SpeechRecognitionCtor) {
-        const recognition = new SpeechRecognitionCtor();
-        recognition.continuous = true;
-        recognition.interimResults = true;
-        recognition.lang = language;
-        recognition.onresult = (event) => {
-          // `event.results` is the full accumulated list for the whole
-          // continuous session, not just what's new since the last event —
-          // rebuilding from scratch each time (rather than appending to
-          // existing state) is what avoids re-appending already-finalized
-          // text on every subsequent result.
-          let finalText = "";
-          const allConfidences: number[] = [];
-          for (let i = 0; i < event.results.length; i++) {
-            const result = event.results[i];
-            if (result.isFinal) {
-              finalText += result[0].transcript + " ";
-              allConfidences.push(result[0].confidence);
-            }
-          }
-          setTranscript(finalText.trim());
-          setConfidences(allConfidences);
-        };
-        recognition.onerror = () => {
-          /* mic hiccups shouldn't kill the recording */
-        };
-        recognitionRef.current = recognition;
-        recognition.start();
-      }
-
-      setPhase("recording");
-    } catch {
-      setError(
-        "Couldn't access your microphone. Check your browser's site permissions and try again."
-      );
-    }
-  }
-
-  function stopRecording() {
-    mediaRecorderRef.current?.stop();
-    recognitionRef.current?.stop();
-    streamRef.current?.getTracks().forEach((t) => t.stop());
-    setPhase("stopped");
-  }
+  const recorder = useVoiceRecorder();
 
   async function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -125,22 +35,18 @@ export function RecordLogModal({
   }
 
   function handleSave() {
-    if (!audioUrl) return;
-    const avgConfidence = confidences.length
-      ? confidences.reduce((a, b) => a + b, 0) / confidences.length
-      : 0.9;
-
-    setPhase("saving");
+    if (!recorder.audioUrl) return;
     startTransition(async () => {
       await createLog({
         employeeName: employeeName.trim() || "Unassigned",
         activity,
         field,
-        transcript,
-        audioUrl,
+        transcript: recorder.transcript,
+        audioUrl: recorder.audioUrl!,
         photoUrl,
         language,
-        accuracy: avgConfidence * 100,
+        accuracy: recorder.accuracy,
+        source: "voice",
       });
       onClose();
     });
@@ -169,28 +75,30 @@ export function RecordLogModal({
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <div className="col-span-2">
-            <label className="text-xs font-medium text-neutral-500">Employee</label>
-            <input
-              list="employee-options"
-              value={employeeName}
-              onChange={(e) => setEmployeeName(e.target.value)}
-              disabled={phase === "recording"}
-              className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm disabled:bg-neutral-50"
-              placeholder="Type a name (new or existing)"
-            />
-            <datalist id="employee-options">
-              {employeeNames.map((name) => (
-                <option key={name} value={name} />
-              ))}
-            </datalist>
-          </div>
+          {!lockedEmployeeName && (
+            <div className="col-span-2">
+              <label className="text-xs font-medium text-neutral-500">Employee</label>
+              <input
+                list="employee-options"
+                value={employeeName}
+                onChange={(e) => setEmployeeName(e.target.value)}
+                disabled={recorder.phase === "recording"}
+                className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm disabled:bg-neutral-50"
+                placeholder="Type a name (new or existing)"
+              />
+              <datalist id="employee-options">
+                {employeeNames.map((name) => (
+                  <option key={name} value={name} />
+                ))}
+              </datalist>
+            </div>
+          )}
           <div>
             <label className="text-xs font-medium text-neutral-500">Activity</label>
             <select
               value={activity}
               onChange={(e) => setActivity(e.target.value)}
-              disabled={phase === "recording"}
+              disabled={recorder.phase === "recording"}
               className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm disabled:bg-neutral-50"
             >
               {ACTIVITIES.map((a) => (
@@ -205,7 +113,7 @@ export function RecordLogModal({
             <select
               value={field}
               onChange={(e) => setField(e.target.value)}
-              disabled={phase === "recording"}
+              disabled={recorder.phase === "recording"}
               className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm disabled:bg-neutral-50"
             >
               {FIELD_NAMES.map((f) => (
@@ -222,7 +130,7 @@ export function RecordLogModal({
             <select
               value={language}
               onChange={(e) => setLanguage(e.target.value)}
-              disabled={phase === "recording"}
+              disabled={recorder.phase === "recording"}
               className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm disabled:bg-neutral-50"
             >
               {LANGUAGES.map((l) => (
@@ -238,28 +146,28 @@ export function RecordLogModal({
         </div>
 
         <div className="mt-4 rounded-xl border border-neutral-200 bg-neutral-50 p-4">
-          {phase === "idle" && (
+          {recorder.phase === "idle" && (
             <button
               type="button"
-              onClick={startRecording}
+              onClick={() => recorder.start(language)}
               className="flex w-full items-center justify-center gap-2 rounded-full bg-accent py-2.5 text-sm font-medium text-white hover:opacity-90"
             >
               <Mic size={16} /> Start Recording
             </button>
           )}
 
-          {phase === "recording" && (
+          {recorder.phase === "recording" && (
             <div>
               <div className="flex items-center justify-center gap-2 text-sm text-red-600">
                 <span className="h-2 w-2 animate-pulse rounded-full bg-red-500" />
                 Recording...
               </div>
               <p className="mt-2 min-h-10 text-sm text-neutral-600 italic">
-                {transcript || (speechSupported ? "Listening..." : "")}
+                {recorder.transcript || (recorder.speechSupported ? "Listening..." : "")}
               </p>
               <button
                 type="button"
-                onClick={stopRecording}
+                onClick={recorder.stop}
                 className="mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-red-600 py-2.5 text-sm font-medium text-white hover:bg-red-700"
               >
                 <Square size={14} /> Stop Recording
@@ -267,16 +175,19 @@ export function RecordLogModal({
             </div>
           )}
 
-          {(phase === "stopped" || phase === "saving") && (
+          {recorder.phase === "stopped" && (
             <div>
-              {audioUrl && <audio src={audioUrl} controls className="w-full" />}
+              {recorder.audioUrl && (
+                <audio src={recorder.audioUrl} controls className="w-full" />
+              )}
               <label className="mt-3 block text-xs font-medium text-neutral-500">
                 Transcript{" "}
-                {!speechSupported && "(live transcription needs Chrome or Edge — type it manually)"}
+                {!recorder.speechSupported &&
+                  "(live transcription needs Chrome or Edge — type it manually)"}
               </label>
               <textarea
-                value={transcript}
-                onChange={(e) => setTranscript(e.target.value)}
+                value={recorder.transcript}
+                onChange={(e) => recorder.setTranscript(e.target.value)}
                 rows={3}
                 className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
                 placeholder="What happened in this log?"
@@ -320,7 +231,7 @@ export function RecordLogModal({
           )}
         </div>
 
-        {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
+        {recorder.error && <p className="mt-3 text-sm text-red-600">{recorder.error}</p>}
       </div>
     </div>
   );

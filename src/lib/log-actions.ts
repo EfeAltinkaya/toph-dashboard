@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 import { coordsForField } from "@/lib/fields";
 import { formatTime, parseLocalDate } from "@/lib/date-utils";
+import { extractLogFields } from "@/lib/extract";
 
 async function requireUser() {
   const user = await getCurrentUser();
@@ -21,6 +22,14 @@ export async function createLog(input: {
   photoUrl?: string | null;
   language: string;
   accuracy: number;
+  // Typed entries arrive with these already filled in; voice logs get them
+  // parsed out of the transcript below. Anything passed explicitly wins,
+  // so the worker's own words are never overwritten by the parser.
+  source?: "voice" | "typed";
+  product?: string | null;
+  target?: string | null;
+  rate?: string | null;
+  notes?: string | null;
 }) {
   await requireUser();
 
@@ -32,6 +41,11 @@ export async function createLog(input: {
 
   const now = new Date();
   const { lat, lng } = coordsForField(input.field);
+  const source = input.source ?? "voice";
+  const extracted =
+    source === "voice"
+      ? extractLogFields(input.transcript)
+      : { product: null, target: null, rate: null };
 
   await prisma.employeeLog.create({
     data: {
@@ -41,17 +55,42 @@ export async function createLog(input: {
       date: now,
       startTime: formatTime(now),
       endTime: formatTime(now),
-      isNew: false,
+      isNew: true,
       accuracy: Math.round(input.accuracy),
       audioUrl: input.audioUrl,
       photoUrl: input.photoUrl || null,
       transcript: input.transcript || "(no transcript captured)",
       language: input.language,
+      source,
+      product: input.product ?? extracted.product,
+      target: input.target ?? extracted.target,
+      rate: input.rate ?? extracted.rate,
+      notes: input.notes ?? null,
       lat,
       lng,
     },
   });
 
+  revalidatePath("/", "layout");
+}
+
+// The "verify" step: a manager correcting what the parser pulled out (or
+// filling in what it missed) without touching the transcript itself, so
+// the original recording stays the source of truth.
+export async function updateLogFields(
+  id: number,
+  fields: { product: string; target: string; rate: string; notes: string }
+) {
+  await requireUser();
+  await prisma.employeeLog.update({
+    where: { id },
+    data: {
+      product: fields.product.trim() || null,
+      target: fields.target.trim() || null,
+      rate: fields.rate.trim() || null,
+      notes: fields.notes.trim() || null,
+    },
+  });
   revalidatePath("/", "layout");
 }
 

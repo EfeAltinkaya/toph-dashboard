@@ -26,8 +26,8 @@ export default async function SchedulePage() {
   return (
     <div className="flex-1 p-8">
       <div>
-        <h1 className="text-2xl font-semibold text-neutral-900">Schedule</h1>
-        <p className="text-sm text-neutral-500">
+        <h1 className="text-2xl font-semibold text-surface">Schedule</h1>
+        <p className="text-sm text-surface/60">
           Activity grouped by day, most recent first.
         </p>
       </div>

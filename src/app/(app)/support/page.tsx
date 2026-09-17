@@ -21,8 +21,8 @@ export default function SupportPage() {
   return (
     <div className="flex-1 p-8">
       <div>
-        <h1 className="text-2xl font-semibold text-neutral-900">Support</h1>
-        <p className="text-sm text-neutral-500">Common questions about Toph.</p>
+        <h1 className="text-2xl font-semibold text-surface">Support</h1>
+        <p className="text-sm text-surface/60">Common questions about Toph.</p>
       </div>
 
       <div className="mt-6 max-w-2xl space-y-4">

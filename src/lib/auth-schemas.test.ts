@@ -2,8 +2,9 @@ import { describe, it, expect } from "vitest";
 import { SignupSchema, LoginSchema, ChangePasswordSchema } from "./auth-schemas";
 
 describe("SignupSchema", () => {
-  it("accepts a valid signup", () => {
+  it("accepts a valid manager signup", () => {
     const result = SignupSchema.safeParse({
+      role: "manager",
       name: "Efe Altinkaya",
       email: "efe@bayranch.com",
       password: "farmpassword123",
@@ -11,8 +12,31 @@ describe("SignupSchema", () => {
     expect(result.success).toBe(true);
   });
 
+  it("accepts a valid worker signup with a join code", () => {
+    const result = SignupSchema.safeParse({
+      role: "worker",
+      name: "Carlos M.",
+      email: "carlos@example.com",
+      password: "farmpassword123",
+      joinCode: "BAYRANCH",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects a worker signup with no join code", () => {
+    const result = SignupSchema.safeParse({
+      role: "worker",
+      name: "Carlos M.",
+      email: "carlos@example.com",
+      password: "farmpassword123",
+      joinCode: "",
+    });
+    expect(result.success).toBe(false);
+  });
+
   it("rejects a password shorter than 8 characters", () => {
     const result = SignupSchema.safeParse({
+      role: "manager",
       name: "Efe",
       email: "efe@bayranch.com",
       password: "short",
@@ -22,6 +46,7 @@ describe("SignupSchema", () => {
 
   it("rejects an invalid email", () => {
     const result = SignupSchema.safeParse({
+      role: "manager",
       name: "Efe",
       email: "not-an-email",
       password: "farmpassword123",
@@ -31,6 +56,7 @@ describe("SignupSchema", () => {
 
   it("rejects a name that's only whitespace", () => {
     const result = SignupSchema.safeParse({
+      role: "manager",
       name: "   ",
       email: "efe@bayranch.com",
       password: "farmpassword123",

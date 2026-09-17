@@ -4,10 +4,13 @@ import { useEffect, useState } from "react";
 import { Check } from "lucide-react";
 
 const THEMES = [
-  { id: "default", label: "Default", swatch: "#171717" },
-  { id: "blue", label: "Blue", swatch: "#2563eb" },
-  { id: "red", label: "Red", swatch: "#dc2626" },
-  { id: "green", label: "Green", swatch: "#16a34a" },
+  { id: "default", label: "Default", swatch: "#ffffff", dark: false },
+  { id: "dark", label: "Dark", swatch: "#171717", dark: true },
+  { id: "slate", label: "Slate", swatch: "#4c6b8a", dark: true },
+  { id: "sage", label: "Sage", swatch: "#6b8f71", dark: true },
+  { id: "terracotta", label: "Terracotta", swatch: "#b0654a", dark: true },
+  { id: "plum", label: "Plum", swatch: "#7d6088", dark: true },
+  { id: "ochre", label: "Ochre", swatch: "#b8935a", dark: true },
 ];
 
 function applyTheme(id: string) {
@@ -58,7 +61,9 @@ export function ThemeSwitcher() {
           className="flex h-8 w-8 items-center justify-center rounded-full border border-neutral-300"
           style={{ backgroundColor: theme.swatch }}
         >
-          {active === theme.id && <Check size={14} className="text-white" />}
+          {active === theme.id && (
+            <Check size={14} className={theme.dark ? "text-white" : "text-neutral-900"} />
+          )}
         </button>
       ))}
     </div>

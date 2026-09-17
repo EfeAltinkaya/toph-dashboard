@@ -7,11 +7,13 @@ import type { NextRequest } from "next/server";
 // happens in getCurrentUser() on each protected page — Proxy must not hit
 // the database itself.
 //
-// "/" is the public marketing/cover page — always accessible, logged in
-// or not (the page itself swaps its CTA based on session state). "/login"
-// and "/signup" are public too, but redirect away if already logged in.
+// The marketing site is always accessible, logged in or not (pages swap
+// their CTA based on session state). Every marketing page has to be listed
+// here: this is an allowlist, so a new public page that isn't added gets
+// silently redirected to /login for logged-out visitors. "/login" and
+// "/signup" are public too, but redirect away if already logged in.
 // Everything else requires a session.
-const ALWAYS_PUBLIC_ROUTES = ["/"];
+const ALWAYS_PUBLIC_ROUTES = ["/", "/product", "/use-cases", "/company"];
 const AUTH_ROUTES = ["/login", "/signup"];
 
 export function proxy(request: NextRequest) {

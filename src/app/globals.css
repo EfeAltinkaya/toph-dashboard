@@ -3,35 +3,186 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
-  /* Accent theme: default matches the near-black primary buttons the
-     Figma design used. Switching [data-theme] on <html> (see ThemeSwitcher)
-     re-points this one variable, and every `bg-accent`/`text-accent`
-     Tailwind utility picks it up at runtime, no rebuild needed. */
+  /* Accent theme: switching [data-theme] on <html> (see ThemeSwitcher)
+     re-points --accent, and every `bg-accent`/`text-accent` Tailwind
+     utility picks it up at runtime, no rebuild needed. Palette is
+     deliberately muted/desaturated (not Tailwind's stock 600 shades) so
+     it reads as a considered brand color rather than a raw hue.
+     "Default" (no [data-theme] attribute) is the original plain
+     white-surface look; "Dark" is a true dark mode built off the same
+     near-black accent, not just a black button color — it flips
+     --surface-text to a light tone and drives the tint ramp off a
+     near-black base instead of white, so the sidebar and page
+     background invert along with the accent. */
   --accent: #171717;
+  --surface-base: #ffffff;
+  --surface-text: #171717;
+  /* Default stays essentially plain white/neutral — it's the "no theme
+     opinion" option, so its own accent (near-black) barely tints
+     anything. The five colors below get a much stronger ramp precisely
+     because their whole point is to be visibly different from this. */
+  --accent-25: color-mix(in srgb, var(--accent) 3%, white);
+  --accent-50: color-mix(in srgb, var(--accent) 6%, white);
+  --accent-100: color-mix(in srgb, var(--accent) 10%, white);
+  --accent-200: color-mix(in srgb, var(--accent) 18%, white);
 }
 
-:root[data-theme="blue"] {
-  --accent: #2563eb;
+:root[data-theme="dark"] {
+  --accent: #171717;
+  --surface-base: #141312;
+  --surface-text: #f2f0ed;
+  --accent-25: #161514;
+  --accent-50: #201f1d;
+  --accent-100: #2d2b28;
+  --accent-200: #423f3a;
 }
-:root[data-theme="red"] {
-  --accent: #dc2626;
+
+/* The five color themes stay light-mode: white surface base, near-black
+   text, and a strong color-mix ramp (accent blended into white) so the
+   sidebar/cards/borders pick up an obviously tinted, not just barely-off-
+   white, cast. */
+:root[data-theme="slate"],
+:root[data-theme="sage"],
+:root[data-theme="terracotta"],
+:root[data-theme="plum"],
+:root[data-theme="ochre"] {
+  --accent-25: color-mix(in srgb, var(--accent) 16%, white);
+  --accent-50: color-mix(in srgb, var(--accent) 30%, white);
+  --accent-100: color-mix(in srgb, var(--accent) 46%, white);
+  --accent-200: color-mix(in srgb, var(--accent) 68%, white);
 }
-:root[data-theme="green"] {
-  --accent: #16a34a;
+:root[data-theme="slate"] {
+  --accent: #4c6b8a;
+}
+:root[data-theme="sage"] {
+  --accent: #6b8f71;
+}
+:root[data-theme="terracotta"] {
+  --accent: #b0654a;
+}
+:root[data-theme="plum"] {
+  --accent: #7d6088;
+}
+:root[data-theme="ochre"] {
+  --accent: #b8935a;
+}
+
+/* Static agricultural palette for the marketing pages only — the dashboard
+   app is untouched and keeps its plain neutral-900/white look. These don't
+   change with the theme picker; --accent (above) is what the picker drives,
+   layered on top of these for glows, underlines, and CTAs. */
+:root {
+  --soil: #211a14;
+  --wheat: #f3ecdd;
+  --crop: #4c7a3d;
+  --harvest: #d6a13d;
+  --clay: #b0532e;
+  --sky: #4f7c93;
+  /* The one deliberately non-farm color: a bright "instrument" blue used
+     only for the data grid laid over field photography, so the moment the
+     site shifts from land to data reads as a shift in color too. */
+  --scan: #6cb8ff;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-accent: var(--accent);
+  --color-accent-25: var(--accent-25);
+  --color-accent-50: var(--accent-50);
+  --color-accent-100: var(--accent-100);
+  --color-accent-200: var(--accent-200);
+  --color-surface: var(--surface-text);
+  --color-soil: var(--soil);
+  --color-wheat: var(--wheat);
+  --color-crop: var(--crop);
+  --color-harvest: var(--harvest);
+  --color-clay: var(--clay);
+  --color-sky: var(--sky);
+  --color-scan: var(--scan);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-fraunces);
+  --font-eyebrow: var(--font-plex-mono);
 }
 
 body {
-  background: var(--background);
+  /* Cream, not stark white — this is what briefly shows through during
+     the marketing page-transition gap (see PageTransition.tsx), and a
+     white flash there read as a flashbang. Every route sets its own
+     background over this anyway, so it's only ever visible for a frame. */
+  background: var(--wheat);
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+}
+
+/* Equalizer bars on the worker's Voice tab — each bar gets a different
+   animation-delay so the row ripples instead of pumping in unison. */
+@keyframes toph-bar {
+  0%,
+  100% {
+    transform: scaleY(0.25);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+/* Field scan: a band sweeps down over the photo (its wrapper is as tall as
+   the section, so translating by its own height covers the section), and
+   mapped plots pulse like a live readout. */
+@keyframes toph-scan {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(100%);
+  }
+}
+.toph-scan {
+  animation: toph-scan 7s linear infinite;
+}
+@keyframes toph-plot {
+  0%,
+  100% {
+    background-color: color-mix(in srgb, var(--scan) 6%, transparent);
+  }
+  50% {
+    background-color: color-mix(in srgb, var(--scan) 22%, transparent);
+  }
+}
+.toph-plot {
+  animation: toph-plot 3.2s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  [style*="toph-bar"] {
+    animation: none !important;
+  }
+  .toph-scan {
+    animation: none;
+    opacity: 0;
+  }
+  .toph-plot {
+    animation: none;
+  }
+}
+
+/* Windmill wheel. `transform-box: view-box` makes the inline
+   transform-origin read in the SVG's own coordinates (the hub), not the
+   element's bounding box. */
+@keyframes toph-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.toph-spin {
+  transform-box: view-box;
+  animation: toph-spin 18s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .toph-spin {
+    animation: none;
+  }
 }
 
 @keyframes toph-pulse {

@@ -18,8 +18,8 @@ export default async function AuditManagerPage() {
   return (
     <div className="flex-1 p-8">
       <div>
-        <h1 className="text-2xl font-semibold text-neutral-900">Audit Manager</h1>
-        <p className="text-sm text-neutral-500">
+        <h1 className="text-2xl font-semibold text-surface">Audit Manager</h1>
+        <p className="text-sm text-surface/60">
           Logs tagged &ldquo;Needs Review&rdquo; or &ldquo;Flagged&rdquo; for compliance follow-up.
         </p>
       </div>

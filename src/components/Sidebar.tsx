@@ -16,6 +16,7 @@ import {
   LifeBuoy,
   ChevronsUpDown,
   LogOut,
+  ExternalLink,
 } from "lucide-react";
 import { logout } from "@/lib/auth-actions";
 
@@ -69,11 +70,11 @@ export function Sidebar({
     .toUpperCase();
 
   return (
-    <aside className="flex h-screen w-64 shrink-0 flex-col justify-between border-r border-neutral-300 bg-white px-3 py-4 text-neutral-700">
+    <aside className="flex h-screen w-64 shrink-0 flex-col justify-between border-r border-accent-200 bg-accent-50 px-3 py-4 text-surface">
       <div>
         <Link
           href="/settings"
-          className="flex items-center gap-2 rounded-lg px-2 py-2 hover:bg-black/5"
+          className="flex items-center gap-2 rounded-lg px-2 py-2 hover:bg-accent-100"
         >
           <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-neutral-300 text-sm font-semibold text-neutral-700">
             {user.avatarUrl ? (
@@ -84,18 +85,18 @@ export function Sidebar({
             )}
           </div>
           <div className="min-w-0 flex-1">
-            <div className="truncate text-sm font-semibold text-neutral-900">
+            <div className="truncate text-sm font-semibold text-surface">
               {user.name}
             </div>
-            <div className="text-xs text-neutral-500">Admin</div>
+            <div className="text-xs text-surface/55">Admin</div>
           </div>
-          <ChevronsUpDown size={16} className="shrink-0 text-neutral-400" />
+          <ChevronsUpDown size={16} className="shrink-0 text-surface/40" />
         </Link>
 
         <nav className="mt-4 space-y-5">
           {NAV_SECTIONS.map((section) => (
             <div key={section.label}>
-              <div className="px-2 pb-1 text-[10px] font-semibold tracking-wider text-neutral-400 uppercase">
+              <div className="px-2 pb-1 text-[10px] font-semibold tracking-wider text-surface/40 uppercase">
                 {section.label}
               </div>
               <div className="space-y-0.5">
@@ -109,8 +110,8 @@ export function Sidebar({
                       href={item.href}
                       className={`flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm ${
                         active
-                          ? "bg-black/5 text-neutral-900"
-                          : "text-neutral-900 hover:bg-black/5"
+                          ? "bg-accent-100 text-surface"
+                          : "text-surface hover:bg-accent-100"
                       }`}
                     >
                       <Icon size={16} className="shrink-0" />
@@ -129,11 +130,18 @@ export function Sidebar({
         </nav>
       </div>
 
-      <div className="space-y-0.5 border-t border-neutral-200 pt-3">
+      <div className="space-y-0.5 border-t border-accent-200 pt-3">
+        <Link
+          href="/"
+          className="flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm text-surface hover:bg-accent-100"
+        >
+          <ExternalLink size={16} />
+          <span>Product site</span>
+        </Link>
         <form action={logout}>
           <button
             type="submit"
-            className="flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left text-sm text-neutral-900 hover:bg-black/5"
+            className="flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left text-sm text-surface hover:bg-accent-100"
           >
             <LogOut size={16} />
             <span>Log Out</span>

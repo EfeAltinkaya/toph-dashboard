@@ -13,6 +13,11 @@ export type LogWithRelations = {
   transcript: string;
   language: string;
   translated: string | null;
+  product: string | null;
+  target: string | null;
+  rate: string | null;
+  notes: string | null;
+  source: string;
   lat: number;
   lng: number;
   tags: { id: number; name: string }[];
