@@ -34,7 +34,7 @@ export async function signup(
   });
 
   await createSession(user.id);
-  redirect("/");
+  redirect("/dashboard");
 }
 
 export async function login(
@@ -63,7 +63,7 @@ export async function login(
   }
 
   await createSession(user.id);
-  redirect("/");
+  redirect("/dashboard");
 }
 
 export async function logout() {

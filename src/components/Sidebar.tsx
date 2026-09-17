@@ -23,7 +23,7 @@ const NAV_SECTIONS = [
   {
     label: "Overview",
     items: [
-      { label: "Dashboard", href: "/", icon: ChartLine },
+      { label: "Dashboard", href: "/dashboard", icon: ChartLine },
       { label: "Activity Logs", href: "/activity-logs", icon: AudioLines },
       { label: "Map", href: "/map", icon: MapIcon },
     ],
@@ -101,7 +101,7 @@ export function Sidebar({
               <div className="space-y-0.5">
                 {section.items.map((item) => {
                   const Icon = item.icon;
-                  const isDashboard = item.href === "/";
+                  const isDashboard = item.href === "/dashboard";
                   const active = pathname === item.href;
                   return (
                     <Link
