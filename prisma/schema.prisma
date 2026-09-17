@@ -29,6 +29,19 @@ model Session {
   createdAt DateTime @default(now())
 }
 
+// Tracked in the database, not in memory, since serverless deployment
+// (Vercel) may run each request on a different, short-lived instance —
+// an in-memory counter would silently stop protecting anything once
+// deployed. See checkLoginRateLimit() in src/lib/rate-limit.ts.
+model LoginAttempt {
+  id        Int      @id @default(autoincrement())
+  email     String
+  success   Boolean
+  createdAt DateTime @default(now())
+
+  @@index([email, createdAt])
+}
+
 model Employee {
   id   Int           @id @default(autoincrement())
   name String        @unique

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Check } from "lucide-react";
 
 const THEMES = [
@@ -24,14 +24,25 @@ function applyTheme(id: string) {
 }
 
 export function ThemeSwitcher() {
-  // Lazy init reads the already-applied attribute (set by the no-flash
-  // script in the root layout) rather than defaulting to "default" and
-  // flickering once useEffect catches up.
-  const [active, setActive] = useState(
-    () =>
-      (typeof document !== "undefined" && document.documentElement.getAttribute("data-theme")) ||
-      "default"
-  );
+  // Always starts at "default" so the server-rendered HTML and the client's
+  // first render match exactly (the server has no access to localStorage
+  // and would otherwise have to guess). The real saved value is applied
+  // right after mount instead, which avoids a hydration mismatch at the
+  // cost of a single, effectively invisible frame.
+  const [active, setActive] = useState("default");
+
+  useEffect(() => {
+    // Deliberate: this is the standard, React-docs-endorsed pattern for
+    // syncing state from a browser-only API (localStorage) after mount,
+    // to avoid a server/client hydration mismatch. There's no external
+    // subscription to attach here — reading storage is a one-shot sync.
+    try {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setActive(localStorage.getItem("toph-theme") || "default");
+    } catch {
+      /* private browsing / storage disabled — stay on "default" */
+    }
+  }, []);
 
   return (
     <div className="flex items-center gap-2">

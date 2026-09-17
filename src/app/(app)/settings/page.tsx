@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/session";
 import { ProfileForm } from "@/components/ProfileForm";
+import { ChangePasswordForm } from "@/components/ChangePasswordForm";
 import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 
 export default async function SettingsPage() {
@@ -13,8 +14,9 @@ export default async function SettingsPage() {
         <h1 className="text-2xl font-semibold text-neutral-900">Settings</h1>
         <p className="text-sm text-neutral-500">Manage your account.</p>
       </div>
-      <div className="mt-6 flex flex-col gap-6 sm:flex-row">
+      <div className="mt-6 flex flex-wrap gap-6">
         <ProfileForm name={user.name} email={user.email} avatarUrl={user.avatarUrl} />
+        <ChangePasswordForm />
 
         <div className="h-fit max-w-sm flex-1 rounded-2xl border border-neutral-200 bg-white p-6">
           <div className="text-sm font-medium text-neutral-700">Color Theme</div>
