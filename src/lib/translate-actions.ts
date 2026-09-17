@@ -14,7 +14,11 @@ export async function translateLog(logId: number): Promise<{ error?: string; tex
   const user = await getCurrentUser();
   if (!user) return { error: "notAuthenticated" };
 
-  const log = await prisma.employeeLog.findUnique({ where: { id: logId } });
+  // Scoped to the caller's farm, so a log id guessed from another farm
+  // comes back as "not found" rather than handing over its transcript.
+  const log = await prisma.employeeLog.findFirst({
+    where: { id: logId, farmId: user.farmId },
+  });
   if (!log) return { error: "logNotFound" };
 
   if (log.translated) return { text: log.translated };
@@ -29,7 +33,10 @@ export async function translateLog(logId: number): Promise<{ error?: string; tex
     const text: string | undefined = data?.responseData?.translatedText;
     if (!text) return { error: "translationEmpty" };
 
-    await prisma.employeeLog.update({ where: { id: logId }, data: { translated: text } });
+    await prisma.employeeLog.updateMany({
+      where: { id: logId, farmId: user.farmId },
+      data: { translated: text },
+    });
     return { text };
   } catch {
     return { error: "translationUnavailable" };

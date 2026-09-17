@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { requireFarmId } from "@/lib/session";
 import { getI18n } from "@/i18n/server";
 import { format, tr } from "@/i18n";
 import { localeFor } from "@/i18n/config";
@@ -15,7 +16,9 @@ export default async function SchedulePage() {
     day: "numeric",
     year: "numeric",
   });
+  const farmId = await requireFarmId();
   const logs = await prisma.employeeLog.findMany({
+    where: { farmId },
     include: { employee: true },
     orderBy: { date: "desc" },
     take: 200,

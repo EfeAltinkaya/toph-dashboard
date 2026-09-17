@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { requireFarmId } from "@/lib/session";
 import { getI18n } from "@/i18n/server";
 import { MessageBoard } from "@/components/MessageBoard";
 
@@ -6,7 +7,9 @@ export const dynamic = "force-dynamic";
 
 export default async function MessagesPage() {
   const { t } = await getI18n();
+  const farmId = await requireFarmId();
   const messages = await prisma.message.findMany({
+    where: { farmId },
     include: { author: true },
     orderBy: { createdAt: "asc" },
     take: 100,

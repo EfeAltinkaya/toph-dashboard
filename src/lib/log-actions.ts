@@ -37,12 +37,13 @@ export async function createLog(input: {
   // measured.
   location?: { lat: number; lng: number; accuracyM: number } | null;
 }) {
-  await requireUser();
+  const { farmId } = await requireUser();
 
+  // Employees are per farm, so the same name in two farms is two people.
   const employee = await prisma.employee.upsert({
-    where: { name: input.employeeName },
+    where: { farmId_name: { farmId, name: input.employeeName } },
     update: {},
-    create: { name: input.employeeName },
+    create: { name: input.employeeName, farmId },
   });
 
   const now = new Date();
@@ -58,6 +59,7 @@ export async function createLog(input: {
   await prisma.employeeLog.create({
     data: {
       employeeId: employee.id,
+      farmId,
       activity: input.activity,
       field: input.field,
       date: now,
@@ -92,9 +94,9 @@ export async function updateLogFields(
   id: number,
   fields: { product: string; target: string; rate: string; notes: string }
 ) {
-  await requireUser();
-  await prisma.employeeLog.update({
-    where: { id },
+  const { farmId } = await requireUser();
+  await prisma.employeeLog.updateMany({
+    where: { id, farmId },
     data: {
       product: fields.product.trim() || null,
       target: fields.target.trim() || null,
@@ -106,8 +108,8 @@ export async function updateLogFields(
 }
 
 export async function setLogPhoto(id: number, photoUrl: string | null) {
-  await requireUser();
-  await prisma.employeeLog.update({ where: { id }, data: { photoUrl } });
+  const { farmId } = await requireUser();
+  await prisma.employeeLog.updateMany({ where: { id, farmId }, data: { photoUrl } });
   revalidatePath("/", "layout");
 }
 
@@ -122,18 +124,20 @@ export async function updateLog(
     endTime: string;
   }
 ) {
-  await requireUser();
+  const { farmId } = await requireUser();
 
   const employee = await prisma.employee.upsert({
-    where: { name: input.employeeName },
+    where: { farmId_name: { farmId, name: input.employeeName } },
     update: {},
-    create: { name: input.employeeName },
+    create: { name: input.employeeName, farmId },
   });
 
   const { lat, lng } = coordsForField(input.field);
 
-  await prisma.employeeLog.update({
-    where: { id },
+  // updateMany keeps the farm in the WHERE clause: editing by id alone
+  // would let one farm's manager rewrite another farm's record.
+  await prisma.employeeLog.updateMany({
+    where: { id, farmId },
     data: {
       employeeId: employee.id,
       activity: input.activity,
@@ -150,7 +154,7 @@ export async function updateLog(
 }
 
 export async function deleteLog(id: number) {
-  await requireUser();
-  await prisma.employeeLog.delete({ where: { id } });
+  const { farmId } = await requireUser();
+  await prisma.employeeLog.deleteMany({ where: { id, farmId } });
   revalidatePath("/", "layout");
 }

@@ -14,12 +14,12 @@ export default async function WorkerLogPage() {
 
   const [logs, farm] = await Promise.all([
     prisma.employeeLog.findMany({
-      where: { employee: { name: user.name } },
+      where: { farmId: user.farmId, employee: { name: user.name } },
       include: { employee: true, tags: true },
       orderBy: { date: "desc" },
       take: 20,
     }),
-    prisma.farm.findFirst(),
+    prisma.farm.findUnique({ where: { id: user.farmId } }),
   ]);
 
   return <WorkerHome userName={user.name} farmName={farm?.name ?? null} logs={logs} />;

@@ -19,12 +19,20 @@ interface SpeechRecognitionEvent extends Event {
   };
 }
 
+// The spec calls this SpeechRecognitionErrorEvent; `error` is a short code
+// like "not-allowed" or "no-speech", and which one it is decides whether
+// the worker needs to be told anything.
+interface SpeechRecognitionErrorEvent extends Event {
+  error: string;
+  message?: string;
+}
+
 interface SpeechRecognition extends EventTarget {
   continuous: boolean;
   interimResults: boolean;
   lang: string;
   onresult: ((event: SpeechRecognitionEvent) => void) | null;
-  onerror: ((event: Event) => void) | null;
+  onerror: ((event: SpeechRecognitionErrorEvent) => void) | null;
   onend: (() => void) | null;
   start: () => void;
   stop: () => void;

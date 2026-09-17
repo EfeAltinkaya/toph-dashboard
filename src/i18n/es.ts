@@ -312,7 +312,7 @@ export const es: Dictionary = {
     },
     signup: {
       title: "Cree su cuenta",
-      managerSubtitle: "Acceso completo al panel, los informes y el equipo.",
+      managerSubtitle: "Cree su granja y obtenga el panel, los informes y el equipo.",
       workerSubtitle: "Registre la actividad del campo y únase a la granja de su equipo.",
       manager: "Gerente",
       worker: "Trabajador de campo",
@@ -320,6 +320,10 @@ export const es: Dictionary = {
       joinCode: "Código de la granja",
       joinCodePlaceholder: "ej. BAYRANCH",
       joinCodeHint: "Pídaselo al gerente que administra la cuenta de su granja.",
+      farmName: "Nombre de la granja",
+      farmNamePlaceholder: "p. ej. Bay Ranch",
+      farmNameHint:
+        "Está creando una granja nueva. Generaremos su código para que sus trabajadores se registren.",
       submitting: "Creando cuenta...",
       submit: "Registrarse",
       haveAccount: "¿Ya tiene cuenta?",
@@ -332,6 +336,7 @@ export const es: Dictionary = {
     invalidEmail: "Ingrese un correo válido.",
     passwordTooShort: "La contraseña debe tener al menos 8 caracteres.",
     joinCodeRequired: "Ingrese el código de su granja.",
+    farmNameTooShort: "El nombre de la granja debe tener al menos 2 caracteres.",
     passwordRequired: "La contraseña es obligatoria.",
     currentPasswordRequired: "Ingrese su contraseña actual.",
     newPasswordTooShort: "La nueva contraseña debe tener al menos 8 caracteres.",
@@ -355,6 +360,14 @@ export const es: Dictionary = {
     translationUnavailable: "No se pudo conectar con el servicio de traducción. Intente de nuevo en un momento.",
     employeeHasLogs: "No se puede eliminar: este empleado tiene {count} actividades registradas. Elimine o reasigne sus registros primero.",
     employeeHasOneLog: "No se puede eliminar: este empleado tiene 1 actividad registrada. Elimínela o reasígnela primero.",
+    micInsecureContext:
+      "Este navegador no permite grabar en una conexión insegura. Abra el sitio con https e intente de nuevo.",
+    speechNotAllowed:
+      "Su navegador bloqueó la transcripción por voz. La grabación sí funciona: escriba abajo lo que dijo, o permita el acceso al micrófono en la configuración del navegador.",
+    speechNetwork:
+      "La transcripción necesita conexión y no pudo comunicarse con el servicio. La grabación quedó guardada: escriba abajo lo que dijo.",
+    speechUnavailable:
+      "Este teléfono grabó bien pero no puede transcribir. Escriba abajo lo que dijo, o use la pestaña Escribir.",
     micUnavailable: "No se pudo acceder al micrófono. Revise los permisos del sitio en su navegador e intente de nuevo.",
     locationDenied: "Se negó el permiso de ubicación. Revise la configuración del sitio en su navegador para permitirlo.",
     locationUnsupported: "Su navegador no admite la geolocalización.",

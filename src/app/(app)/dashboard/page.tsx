@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { requireFarmId } from "@/lib/session";
 import { farmDayOffset, startOfFarmDay } from "@/lib/date-utils";
 import { DashboardBody } from "@/components/DashboardBody";
 
@@ -8,8 +9,10 @@ import { DashboardBody } from "@/components/DashboardBody";
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
+  const farmId = await requireFarmId();
   const [logs, tags] = await Promise.all([
     prisma.employeeLog.findMany({
+      where: { farmId },
       include: { employee: true, tags: true },
       orderBy: { date: "desc" },
     }),

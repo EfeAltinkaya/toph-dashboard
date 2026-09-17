@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { requireFarmId } from "@/lib/session";
 import { getI18n } from "@/i18n/server";
 import { FarmMap } from "@/components/FarmMap";
 
@@ -6,7 +7,9 @@ export const dynamic = "force-dynamic";
 
 export default async function MapPage() {
   const { t } = await getI18n();
+  const farmId = await requireFarmId();
   const logs = await prisma.employeeLog.groupBy({
+    where: { farmId },
     by: ["field"],
     _count: { field: true },
   });

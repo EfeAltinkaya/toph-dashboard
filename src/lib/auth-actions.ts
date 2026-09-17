@@ -9,6 +9,31 @@ import { SignupSchema, LoginSchema, ChangePasswordSchema } from "@/lib/auth-sche
 
 export type AuthFormState = { error?: string } | undefined;
 
+/**
+ * A farm's join code, derived from its name: "Bay Ranch" -> "BAYRANCH12".
+ * Readable enough to say out loud across a field, which matters more than
+ * being short, and suffixed with digits so two farms with the same name
+ * don't collide. Collisions are retried rather than assumed away.
+ */
+async function createFarm(name: string) {
+  const stem =
+    name
+      .toUpperCase()
+      .replace(/[^A-Z0-9]/g, "")
+      .slice(0, 8) || "FARM";
+
+  for (let attempt = 0; attempt < 10; attempt++) {
+    const joinCode = `${stem}${Math.floor(10 + Math.random() * 90)}`;
+    const existing = await prisma.farm.findUnique({ where: { joinCode } });
+    if (!existing) return prisma.farm.create({ data: { name, joinCode } });
+  }
+  // Ten taken codes for one name is either a very popular name or a bug;
+  // falling back to something guaranteed unique beats failing the signup.
+  return prisma.farm.create({
+    data: { name, joinCode: `${stem}${Date.now().toString().slice(-6)}` },
+  });
+}
+
 export async function signup(
   _prevState: AuthFormState,
   formData: FormData
@@ -19,6 +44,7 @@ export async function signup(
     email: formData.get("email"),
     password: formData.get("password"),
     joinCode: formData.get("joinCode"),
+    farmName: formData.get("farmName"),
   });
   if (!parsed.success) {
     return { error: parsed.error.issues[0].message };
@@ -30,6 +56,10 @@ export async function signup(
     return { error: "emailTaken" };
   }
 
+  // A worker joins an existing farm by code; a manager creates a new one.
+  // Either way the account is tied to exactly one farm before it exists,
+  // so there is no window in which someone is signed in with no tenant.
+  let farmId: number;
   if (role === "worker") {
     const farm = await prisma.farm.findUnique({
       where: { joinCode: parsed.data.joinCode.trim().toUpperCase() },
@@ -37,11 +67,15 @@ export async function signup(
     if (!farm) {
       return { error: "joinCodeInvalid" };
     }
+    farmId = farm.id;
+  } else {
+    const farm = await createFarm(parsed.data.farmName);
+    farmId = farm.id;
   }
 
   const passwordHash = await bcrypt.hash(password, 10);
   const user = await prisma.user.create({
-    data: { name, email, passwordHash, role },
+    data: { name, email, passwordHash, role, farmId },
   });
 
   await createSession(user.id);

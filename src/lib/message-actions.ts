@@ -11,7 +11,7 @@ export async function postMessage(body: string) {
   if (!trimmed) return;
 
   await prisma.message.create({
-    data: { authorId: user.id, body: trimmed },
+    data: { authorId: user.id, farmId: user.farmId, body: trimmed },
   });
   revalidatePath("/messages");
 }

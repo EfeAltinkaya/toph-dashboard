@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { requireFarmId } from "@/lib/session";
 import { getI18n } from "@/i18n/server";
 import { tr } from "@/i18n";
 
@@ -31,11 +32,12 @@ function Bar({
 
 export default async function ReportsPage() {
   const { t } = await getI18n();
+  const farmId = await requireFarmId();
   const [byActivity, byField, totalLogs, totalEmployees] = await Promise.all([
-    prisma.employeeLog.groupBy({ by: ["activity"], _count: { activity: true } }),
-    prisma.employeeLog.groupBy({ by: ["field"], _count: { field: true } }),
-    prisma.employeeLog.count(),
-    prisma.employee.count(),
+    prisma.employeeLog.groupBy({ where: { farmId }, by: ["activity"], _count: { activity: true } }),
+    prisma.employeeLog.groupBy({ where: { farmId }, by: ["field"], _count: { field: true } }),
+    prisma.employeeLog.count({ where: { farmId } }),
+    prisma.employee.count({ where: { farmId } }),
   ]);
 
   const activityRows = byActivity

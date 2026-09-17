@@ -4,6 +4,16 @@ import { useRef, useState } from "react";
 
 export type RecorderPhase = "idle" | "recording" | "stopped";
 
+// Safari records MP4, Chrome and Firefox record WebM, and a device only
+// offers what it offers. Asking rather than assuming is what keeps the
+// saved audio playable: labelling an MP4 recording as WebM produced a
+// file that would not play back on the phone that recorded it.
+function pickMimeType(): string | undefined {
+  if (typeof MediaRecorder === "undefined") return undefined;
+  const candidates = ["audio/webm", "audio/mp4", "audio/ogg"];
+  return candidates.find((type) => MediaRecorder.isTypeSupported?.(type));
+}
+
 function blobToDataUrl(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -28,6 +38,10 @@ export function useVoiceRecorder() {
   const [confidences, setConfidences] = useState<number[]>([]);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Separate from `error`: transcription can fail while the recording
+  // itself is fine, and in that case the worker should be told to type the
+  // words rather than lose the log.
+  const [transcriptError, setTranscriptError] = useState<string | null>(null);
   // Lazy initializer only runs in the browser render pass, so this is safe
   // even though the component also renders once on the server (where
   // `window` has no SpeechRecognition constructors at all).
@@ -47,18 +61,29 @@ export function useVoiceRecorder() {
     setTranscript("");
     setConfidences([]);
     setAudioUrl(null);
+    setTranscriptError(null);
 
     try {
+      if (!navigator.mediaDevices?.getUserMedia) {
+        // Every browser that can record has this. Not having it means an
+        // insecure origin (plain http) far more often than an old browser,
+        // and "check your permissions" would be the wrong advice.
+        setError("micInsecureContext");
+        return;
+      }
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
 
-      const recorder = new MediaRecorder(stream);
+      const mimeType = pickMimeType();
+      const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
       chunksRef.current = [];
       recorder.ondataavailable = (e) => {
         if (e.data.size > 0) chunksRef.current.push(e.data);
       };
       recorder.onstop = async () => {
-        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+        const blob = new Blob(chunksRef.current, {
+          type: recorder.mimeType || mimeType || "audio/webm",
+        });
         setAudioUrl(await blobToDataUrl(blob));
       };
       mediaRecorderRef.current = recorder;
@@ -89,11 +114,31 @@ export function useVoiceRecorder() {
           setTranscript(finalText.trim());
           setConfidences(allConfidences);
         };
-        recognition.onerror = () => {
-          /* mic hiccups shouldn't kill the recording */
+        recognition.onerror = (event) => {
+          // A pause in speech is not a failure, and neither is the
+          // recogniser giving up at the end of a long silence. Anything
+          // else is worth saying out loud: the old handler swallowed every
+          // error, so a phone that could record but not transcribe just
+          // sat on "Listening…" forever with no explanation.
+          if (event.error === "no-speech" || event.error === "aborted") return;
+          setTranscriptError(
+            event.error === "not-allowed" || event.error === "service-not-allowed"
+              ? "speechNotAllowed"
+              : event.error === "network"
+                ? "speechNetwork"
+                : "speechUnavailable"
+          );
         };
         recognitionRef.current = recognition;
-        recognition.start();
+        // iOS in particular can refuse to start the recogniser while the
+        // recorder holds the microphone. That must not take the recording
+        // down with it, so the worker still ends up with audio and can
+        // type what they said.
+        try {
+          recognition.start();
+        } catch {
+          setTranscriptError("speechUnavailable");
+        }
       }
 
       setPhase("recording");
@@ -116,6 +161,7 @@ export function useVoiceRecorder() {
     setConfidences([]);
     setAudioUrl(null);
     setError(null);
+    setTranscriptError(null);
   }
 
   // Averaged recogniser confidence, shown on the dashboard as "response
@@ -131,6 +177,7 @@ export function useVoiceRecorder() {
     setTranscript,
     audioUrl,
     error,
+    transcriptError,
     speechSupported,
     accuracy,
     start,

@@ -180,9 +180,15 @@ function buildTranscriptEs(
 }
 
 async function main() {
-  await prisma.employeeLog.deleteMany();
-  await prisma.tag.deleteMany();
-  await prisma.employee.deleteMany();
+  // Only the demo farm is reseeded. Any other farm created through the
+  // app (a manager signing up for their own) is left alone, so running the
+  // seed can never wipe another farm’s data.
+  const demoFarm = await prisma.farm.findUnique({ where: { joinCode: "BAYRANCH" } });
+  if (demoFarm) {
+    await prisma.employeeLog.deleteMany({ where: { farmId: demoFarm.id } });
+    await prisma.employee.deleteMany({ where: { farmId: demoFarm.id } });
+  }
+
 
   // The farm a worker joins with a code. Upserted rather than recreated so
   // re-seeding demo logs never invalidates a code already handed out.
@@ -192,12 +198,16 @@ async function main() {
     create: { name: "Bay Ranch", joinCode: "BAYRANCH" },
   });
 
+  // Tags are shared reference labels, upserted rather than recreated: a
+  // delete would disconnect them from another farm’s tagged logs.
   const tags = await Promise.all(
-    TAG_NAMES.map((name) => prisma.tag.create({ data: { name } }))
+    TAG_NAMES.map((name) =>
+      prisma.tag.upsert({ where: { name }, update: {}, create: { name } })
+    )
   );
 
   const employees = await Promise.all(
-    EMPLOYEES.map((name) => prisma.employee.create({ data: { name } }))
+    EMPLOYEES.map((name) => prisma.employee.create({ data: { name, farmId: farm.id } }))
   );
 
   const fieldNames = FIELD_NAMES;
@@ -239,6 +249,7 @@ async function main() {
       const log = await prisma.employeeLog.create({
         data: {
           employeeId: employee.id,
+          farmId: farm.id,
           activity,
           field,
           date,

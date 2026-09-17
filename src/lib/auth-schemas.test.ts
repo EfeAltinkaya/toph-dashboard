@@ -8,8 +8,22 @@ describe("SignupSchema", () => {
       name: "Efe Altinkaya",
       email: "efe@bayranch.com",
       password: "farmpassword123",
+      farmName: "Bay Ranch",
     });
     expect(result.success).toBe(true);
+  });
+
+  it("rejects a manager signup with no farm name", () => {
+    // A manager account without a farm would have nothing to be a manager
+    // of, and the alternative (dropping them into an existing farm) is
+    // exactly the leak this is here to prevent.
+    const result = SignupSchema.safeParse({
+      role: "manager",
+      name: "Efe Altinkaya",
+      email: "efe@bayranch.com",
+      password: "farmpassword123",
+    });
+    expect(result.success).toBe(false);
   });
 
   it("accepts a valid worker signup with a join code", () => {

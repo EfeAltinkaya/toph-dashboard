@@ -12,6 +12,10 @@ export const SignupSchema = z.discriminatedUnion("role", [
     name: z.string().trim().min(2, "nameTooShort"),
     email: z.email("invalidEmail"),
     password: z.string().min(8, "passwordTooShort"),
+    // A manager signs up by creating their own farm, so they never land
+    // inside someone else's operation. The join code for it is generated,
+    // not chosen, and shown to them in Settings afterwards.
+    farmName: z.string().trim().min(2, "farmNameTooShort"),
   }),
   z.object({
     role: z.literal("worker"),

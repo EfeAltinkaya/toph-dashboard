@@ -15,7 +15,9 @@ export default async function AppLayout({
   if (!user) redirect("/login");
   if (user.role === "worker") redirect("/log");
 
-  const newLogCount = await prisma.employeeLog.count({ where: { isNew: true } });
+  const newLogCount = await prisma.employeeLog.count({
+    where: { farmId: user.farmId, isNew: true },
+  });
 
   return (
     <div className="flex min-h-screen bg-accent-25">

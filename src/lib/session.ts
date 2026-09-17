@@ -2,6 +2,7 @@ import "server-only";
 import { cache } from "react";
 import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 
 const secretKey = process.env.SESSION_SECRET;
@@ -80,4 +81,18 @@ export const getCurrentUser = cache(async () => {
   if (!session || session.expiresAt < new Date()) return null;
 
   return session.user;
+});
+
+/**
+ * The farm the signed-in user belongs to. Every dashboard query is scoped
+ * by this, and it lives here as one named helper so a new page can't
+ * accidentally read across farms by forgetting a `where` clause: the value
+ * a page needs to filter by is only obtainable from the session.
+ */
+export const requireFarmId = cache(async () => {
+  const user = await getCurrentUser();
+  // Callers all sit behind the (app) layout's own check, so this is a
+  // belt-and-braces redirect rather than the primary gate.
+  if (!user) redirect("/login");
+  return user.farmId;
 });

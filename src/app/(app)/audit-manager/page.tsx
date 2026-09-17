@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { requireFarmId } from "@/lib/session";
 import { getI18n } from "@/i18n/server";
 import { format, tr } from "@/i18n";
 import { LogsTable } from "@/components/LogsTable";
@@ -9,13 +10,14 @@ const AUDIT_TAGS = ["Needs Review", "Flagged"];
 
 export default async function AuditManagerPage() {
   const { t } = await getI18n();
+  const farmId = await requireFarmId();
   const tagNames = {
     needsReview: tr(t.vocab.tags, "Needs Review"),
     flagged: tr(t.vocab.tags, "Flagged"),
   };
   const [logs, tags] = await Promise.all([
     prisma.employeeLog.findMany({
-      where: { tags: { some: { name: { in: AUDIT_TAGS } } } },
+      where: { farmId, tags: { some: { name: { in: AUDIT_TAGS } } } },
       include: { employee: true, tags: true },
       orderBy: { date: "desc" },
     }),

@@ -316,7 +316,7 @@ export const en = {
     },
     signup: {
       title: "Create your account",
-      managerSubtitle: "Full access to the dashboard, reports, and team.",
+      managerSubtitle: "Create your farm and get the dashboard, reports, and team.",
       workerSubtitle: "Log field activity and join your team's farm.",
       manager: "Manager",
       worker: "Field Worker",
@@ -324,6 +324,10 @@ export const en = {
       joinCode: "Farm join code",
       joinCodePlaceholder: "e.g. BAYRANCH",
       joinCodeHint: "Get this from the manager who runs your farm's account.",
+      farmName: "Farm name",
+      farmNamePlaceholder: "e.g. Bay Ranch",
+      farmNameHint:
+        "You're creating a new farm. We'll generate its join code so your workers can sign up.",
       submitting: "Creating account...",
       submit: "Sign Up",
       haveAccount: "Already have an account?",
@@ -338,6 +342,7 @@ export const en = {
     invalidEmail: "Enter a valid email.",
     passwordTooShort: "Password must be at least 8 characters.",
     joinCodeRequired: "Enter your farm's join code.",
+    farmNameTooShort: "Farm name must be at least 2 characters.",
     passwordRequired: "Password is required.",
     currentPasswordRequired: "Enter your current password.",
     newPasswordTooShort: "New password must be at least 8 characters.",
@@ -362,6 +367,14 @@ export const en = {
     employeeHasLogs: "Can't delete: this employee has {count} logged activities. Delete or reassign their logs first.",
     employeeHasOneLog: "Can't delete: this employee has 1 logged activity. Delete or reassign it first.",
     micUnavailable: "Couldn't access your microphone. Check your browser's site permissions and try again.",
+    micInsecureContext:
+      "This browser won't allow recording on an insecure connection. Open the site over https and try again.",
+    speechNotAllowed:
+      "Your browser blocked speech-to-text. The recording still works: type what you said below, or allow microphone access in your browser settings.",
+    speechNetwork:
+      "Speech-to-text needs a connection and couldn't reach the service. The recording is saved: type what you said below.",
+    speechUnavailable:
+      "This phone recorded fine but can't transcribe. Type what you said below, or use the Type tab.",
     locationDenied: "Location permission was denied. Check your browser's site settings to allow it.",
     locationUnsupported: "Your browser doesn't support geolocation.",
   },

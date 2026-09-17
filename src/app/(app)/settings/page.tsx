@@ -12,7 +12,7 @@ export default async function SettingsPage() {
   if (!user) redirect("/login");
 
   const { t } = await getI18n();
-  const farm = await prisma.farm.findFirst();
+  const farm = await prisma.farm.findUnique({ where: { id: user.farmId } });
 
   return (
     <div className="flex-1 p-8">

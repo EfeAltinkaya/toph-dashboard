@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { requireFarmId } from "@/lib/session";
 import { applicationRecords } from "@/lib/records";
 import { RecordsReport } from "@/components/RecordsReport";
 
@@ -11,8 +12,9 @@ export default async function RecordsPage() {
   // Only logs that applied a product can appear on a use report, so the
   // filter happens in the query rather than pulling the whole history
   // across the wire to throw most of it away.
+  const farmId = await requireFarmId();
   const logs = await prisma.employeeLog.findMany({
-    where: { product: { not: null } },
+    where: { farmId, product: { not: null } },
     include: { employee: { select: { name: true } } },
     orderBy: { date: "desc" },
   });

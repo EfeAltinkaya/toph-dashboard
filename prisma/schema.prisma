@@ -20,6 +20,12 @@ model User {
   email        String   @unique
   passwordHash String
   avatarUrl    String?
+  // Which farm this account belongs to. A manager signing up creates one
+  // and gets its join code; a worker signing up joins an existing one by
+  // typing that code. Every query in the dashboard is filtered by it, so
+  // one farm can never see another's records.
+  farm         Farm     @relation(fields: [farmId], references: [id])
+  farmId       Int
   // "manager" gets the full dashboard; "worker" gets a single log-activity
   // screen and nothing else — matches the real Toph/Furrow product's
   // role split, and lets someone join as a worker without being able to
@@ -30,14 +36,18 @@ model User {
   messages     Message[]
 }
 
-// A farm is just a join code gate in this build (there's one real farm in
-// the demo data) — a worker signing up types this code to prove they
-// belong, rather than anyone being able to self-enroll as an employee.
+// The tenant. Everything a farm records belongs to exactly one of these,
+// and the join code is how a worker proves they belong to it instead of
+// being able to self-enroll into someone else's operation.
 model Farm {
   id        Int      @id @default(autoincrement())
   name      String
   joinCode  String   @unique
   createdAt DateTime @default(now())
+  users     User[]
+  employees Employee[]
+  logs      EmployeeLog[]
+  messages  Message[]
 }
 
 model Session {
@@ -62,9 +72,15 @@ model LoginAttempt {
 }
 
 model Employee {
-  id   Int           @id @default(autoincrement())
-  name String        @unique
-  logs EmployeeLog[]
+  id     Int           @id @default(autoincrement())
+  name   String
+  farm   Farm          @relation(fields: [farmId], references: [id])
+  farmId Int
+  logs   EmployeeLog[]
+
+  // Names are unique within a farm, not globally: two farms can both
+  // employ a Maria Lopez, and neither should block the other's signup.
+  @@unique([farmId, name])
 }
 
 model Tag {
@@ -77,6 +93,8 @@ model Message {
   id        Int      @id @default(autoincrement())
   author    User     @relation(fields: [authorId], references: [id])
   authorId  Int
+  farm      Farm     @relation(fields: [farmId], references: [id])
+  farmId    Int
   body      String
   createdAt DateTime @default(now())
 }
@@ -98,6 +116,11 @@ model EmployeeLog {
   id         Int      @id @default(autoincrement())
   employee   Employee @relation(fields: [employeeId], references: [id])
   employeeId Int
+  // Denormalized from the employee on purpose: every dashboard query
+  // filters on it, and a farm-scoped index here beats joining through
+  // Employee on every read.
+  farm       Farm     @relation(fields: [farmId], references: [id])
+  farmId     Int
   activity   String
   field      String
   date       DateTime
@@ -139,4 +162,6 @@ model EmployeeLog {
   gpsAccuracyM Float?
   tags       Tag[]
   createdAt  DateTime @default(now())
+
+  @@index([farmId, date])
 }

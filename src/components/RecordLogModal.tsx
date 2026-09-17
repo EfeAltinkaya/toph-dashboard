@@ -237,6 +237,13 @@ export function RecordLogModal({
         {recorder.error && (
           <p className="mt-3 text-sm text-red-600">{errorText(t, recorder.error)}</p>
         )}
+        {/* Transcription can fail while the recording succeeds, so this
+            reads as a note about typing the words in, not as an error. */}
+        {recorder.transcriptError && (
+          <p className="mt-3 rounded-xl bg-accent-25 px-3 py-2 text-sm text-neutral-700">
+            {errorText(t, recorder.transcriptError)}
+          </p>
+        )}
       </div>
     </div>
   );

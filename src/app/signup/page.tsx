@@ -71,6 +71,23 @@ export default function SignupPage() {
             <p className="mt-1 text-xs text-neutral-400">{s.passwordHint}</p>
           </div>
 
+          {role === "manager" && (
+            <div>
+              <label className="text-sm font-medium text-neutral-700" htmlFor="farmName">
+                {s.farmName}
+              </label>
+              <input
+                id="farmName"
+                name="farmName"
+                type="text"
+                required
+                placeholder={s.farmNamePlaceholder}
+                className={INPUT}
+              />
+              <p className="mt-1 text-xs text-neutral-400">{s.farmNameHint}</p>
+            </div>
+          )}
+
           {role === "worker" && (
             <div>
               <label className="text-sm font-medium text-neutral-700" htmlFor="joinCode">

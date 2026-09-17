@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { requireFarmId } from "@/lib/session";
 import { getI18n } from "@/i18n/server";
 import { LogsTable } from "@/components/LogsTable";
 
@@ -6,8 +7,10 @@ export const dynamic = "force-dynamic";
 
 export default async function ActivityLogsPage() {
   const { t } = await getI18n();
+  const farmId = await requireFarmId();
   const [logs, tags] = await Promise.all([
     prisma.employeeLog.findMany({
+      where: { farmId },
       include: { employee: true, tags: true },
       orderBy: { date: "desc" },
     }),

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { requireFarmId } from "@/lib/session";
 import { getI18n } from "@/i18n/server";
 import { EmployeesTable } from "@/components/EmployeesTable";
 
@@ -6,7 +7,9 @@ export const dynamic = "force-dynamic";
 
 export default async function EmployeesPage() {
   const { t } = await getI18n();
+  const farmId = await requireFarmId();
   const employees = await prisma.employee.findMany({
+    where: { farmId },
     include: { logs: { select: { accuracy: true, date: true } } },
     orderBy: { name: "asc" },
   });

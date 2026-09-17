@@ -245,6 +245,13 @@ export function WorkerVoicePanel({
       </div>
 
       {recorder.error && <p className="mt-3 text-sm text-red-600">{errorText(t, recorder.error)}</p>}
+      {/* A transcription failure is not a recording failure: the log can
+          still be filed, so this is a note rather than an error. */}
+      {recorder.transcriptError && (
+        <p className="mt-3 rounded-xl bg-accent-25 px-3 py-2 text-sm text-neutral-700">
+          {errorText(t, recorder.transcriptError)}
+        </p>
+      )}
     </div>
   );
 }

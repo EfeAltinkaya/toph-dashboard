@@ -11,22 +11,24 @@ async function requireUser() {
 }
 
 export async function addEmployee(name: string) {
-  await requireUser();
+  const { farmId } = await requireUser();
   const trimmed = name.trim();
   if (!trimmed) return;
   await prisma.employee.upsert({
-    where: { name: trimmed },
+    where: { farmId_name: { farmId, name: trimmed } },
     update: {},
-    create: { name: trimmed },
+    create: { name: trimmed, farmId },
   });
   revalidatePath("/employees");
 }
 
 export async function renameEmployee(id: number, name: string) {
-  await requireUser();
+  const { farmId } = await requireUser();
   const trimmed = name.trim();
   if (!trimmed) return;
-  await prisma.employee.update({ where: { id }, data: { name: trimmed } });
+  // updateMany rather than update: the farm goes in the WHERE clause, so an
+  // id belonging to another farm matches nothing instead of being edited.
+  await prisma.employee.updateMany({ where: { id, farmId }, data: { name: trimmed } });
   revalidatePath("/", "layout");
 }
 
@@ -38,14 +40,14 @@ export type DeleteEmployeeResult = { error?: "employeeHasLogs" | "employeeHasOne
 // by reassigning or deleting the logs first), not something to silently
 // pick a default for.
 export async function deleteEmployee(id: number): Promise<DeleteEmployeeResult> {
-  await requireUser();
-  const logCount = await prisma.employeeLog.count({ where: { employeeId: id } });
+  const { farmId } = await requireUser();
+  const logCount = await prisma.employeeLog.count({ where: { employeeId: id, farmId } });
   if (logCount > 0) {
     return logCount === 1
       ? { error: "employeeHasOneLog" }
       : { error: "employeeHasLogs", count: logCount };
   }
-  await prisma.employee.delete({ where: { id } });
+  await prisma.employee.deleteMany({ where: { id, farmId } });
   revalidatePath("/employees");
   return {};
 }
