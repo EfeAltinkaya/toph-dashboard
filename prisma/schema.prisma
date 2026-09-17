@@ -76,6 +76,8 @@ model EmployeeLog {
   audioUrl   String
   photoUrl   String?
   transcript String
+  language   String  @default("en-US")
+  translated String?
   lat        Float
   lng        Float
   tags       Tag[]

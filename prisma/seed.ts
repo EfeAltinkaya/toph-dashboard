@@ -49,6 +49,33 @@ function buildTranscript(activity: string, field: string, isoTimestamp: string) 
   );
 }
 
+const ACTIVITY_ES: Record<string, string> = {
+  Spraying: "rociando",
+  Harvesting: "cosechando",
+  Planting: "sembrando",
+  Irrigation: "riego",
+  Scouting: "inspeccionando",
+  Pruning: "podando",
+  "Soil work": "trabajo de suelo",
+  "Equipment maintenance": "mantenimiento de equipo",
+};
+
+// A handful of seeded logs are recorded as if a Spanish-speaking worker
+// used the app, so the Translate feature has something real to demo out
+// of the box instead of only working after a fresh recording.
+function buildTranscriptEs(activity: string, field: string, isoTimestamp: string) {
+  const actividad = ACTIVITY_ES[activity] ?? activity.toLowerCase();
+  return (
+    `Registro de voz guiado sin conexión creado a las ${isoTimestamp}. ` +
+    `Pregunta (tipo_actividad): ¿Qué tipo de actividad fue esta? ` +
+    `Respuesta: estuve ${actividad} en ${field} esta mañana. ` +
+    `Pregunta (bloque_campo): ¿Dónde estaba trabajando? ` +
+    `Respuesta: en ${field}, todo salió bien y terminé sin problemas. ` +
+    `Pregunta (notas): ¿Algo más que reportar? ` +
+    `Respuesta: no, todo normal, nos vemos mañana.`
+  );
+}
+
 async function main() {
   await prisma.employeeLog.deleteMany();
   await prisma.tag.deleteMany();
@@ -83,6 +110,7 @@ async function main() {
       const startTime = formatTime(startHour, 0);
       const endTime = formatTime(startHour + durationHours, (logIndex % 2) * 30);
       const accuracy = 84 + ((logIndex * 7) % 15); // 84-98
+      const isSpanish = logIndex % 5 === 0;
 
       const log = await prisma.employeeLog.create({
         data: {
@@ -95,7 +123,10 @@ async function main() {
           isNew: logIndex < 2,
           accuracy,
           audioUrl: "/audio/sample-log.wav",
-          transcript: buildTranscript(activity, field, date.toISOString()),
+          transcript: isSpanish
+            ? buildTranscriptEs(activity, field, date.toISOString())
+            : buildTranscript(activity, field, date.toISOString()),
+          language: isSpanish ? "es-ES" : "en-US",
           lat: FIELD_COORDS[field].lat,
           lng: FIELD_COORDS[field].lng,
           tags:

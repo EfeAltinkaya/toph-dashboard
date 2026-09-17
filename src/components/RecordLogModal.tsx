@@ -3,7 +3,7 @@
 import { useRef, useState, useTransition } from "react";
 import { Mic, Square, X, Loader2, Camera } from "lucide-react";
 import { createLog } from "@/lib/log-actions";
-import { ACTIVITIES } from "@/lib/constants";
+import { ACTIVITIES, LANGUAGES } from "@/lib/constants";
 import { FIELD_NAMES } from "@/lib/fields";
 import { resizeImageFile } from "@/lib/image";
 
@@ -29,6 +29,7 @@ export function RecordLogModal({
   const [employeeName, setEmployeeName] = useState(employeeNames[0] ?? "");
   const [activity, setActivity] = useState<string>(ACTIVITIES[0]);
   const [field, setField] = useState(FIELD_NAMES[0]);
+  const [language, setLanguage] = useState<string>(LANGUAGES[0].code);
   const [transcript, setTranscript] = useState("");
   const [confidences, setConfidences] = useState<number[]>([]);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
@@ -76,7 +77,7 @@ export function RecordLogModal({
         const recognition = new SpeechRecognitionCtor();
         recognition.continuous = true;
         recognition.interimResults = true;
-        recognition.lang = "en-US";
+        recognition.lang = language;
         recognition.onresult = (event) => {
           // `event.results` is the full accumulated list for the whole
           // continuous session, not just what's new since the last event —
@@ -138,6 +139,7 @@ export function RecordLogModal({
         transcript,
         audioUrl,
         photoUrl,
+        language,
         accuracy: avgConfidence * 100,
       });
       onClose();
@@ -212,6 +214,26 @@ export function RecordLogModal({
                 </option>
               ))}
             </select>
+          </div>
+          <div className="col-span-2">
+            <label className="text-xs font-medium text-neutral-500">
+              Spoken Language
+            </label>
+            <select
+              value={language}
+              onChange={(e) => setLanguage(e.target.value)}
+              disabled={phase === "recording"}
+              className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm disabled:bg-neutral-50"
+            >
+              {LANGUAGES.map((l) => (
+                <option key={l.code} value={l.code}>
+                  {l.label}
+                </option>
+              ))}
+            </select>
+            <p className="mt-1 text-[11px] text-neutral-400">
+              Sets what the recognizer listens for. Logs in Spanish can be translated to English afterward.
+            </p>
           </div>
         </div>
 

@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Maximize2, Pencil, Trash2, X, Check, Camera } from "lucide-react";
+import { Maximize2, Pencil, Trash2, X, Check, Camera, Languages, Loader2 } from "lucide-react";
 import { AudioPlayer } from "@/components/AudioPlayer";
 import { TagPicker } from "@/components/TagPicker";
 import { FieldMap } from "@/components/FieldMap";
 import { markLogViewed } from "@/app/actions";
 import { updateLog, deleteLog, setLogPhoto } from "@/lib/log-actions";
+import { translateLog } from "@/lib/translate-actions";
 import { ACTIVITIES } from "@/lib/constants";
 import { FIELD_NAMES } from "@/lib/fields";
 import { resizeImageFile } from "@/lib/image";
@@ -19,6 +20,8 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
   day: "numeric",
   year: "numeric",
 });
+
+const LANGUAGE_FLAGS: Record<string, string> = { es: "🇪🇸", en: "🇺🇸" };
 
 function toDateInputValue(date: Date) {
   return date.toISOString().slice(0, 10);
@@ -38,6 +41,28 @@ export function LogRow({
   const [mapOpen, setMapOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [translated, setTranslated] = useState(log.translated);
+  const [showTranslation, setShowTranslation] = useState(!!log.translated);
+  const [translating, setTranslating] = useState(false);
+  const [translateError, setTranslateError] = useState<string | null>(null);
+
+  const sourceLang = log.language.split("-")[0];
+  const isForeignLanguage = sourceLang !== "en";
+
+  function handleTranslate() {
+    setTranslateError(null);
+    setTranslating(true);
+    startTransition(async () => {
+      const result = await translateLog(log.id);
+      setTranslating(false);
+      if (result.error) {
+        setTranslateError(result.error);
+      } else if (result.text) {
+        setTranslated(result.text);
+        setShowTranslation(true);
+      }
+    });
+  }
 
   const [form, setForm] = useState(() => ({
     employeeName: log.employee.name,
@@ -165,6 +190,9 @@ export function LogRow({
         />
         <div className="flex items-center gap-2 font-medium text-neutral-900">
           {log.employee.name}
+          {isForeignLanguage && (
+            <span title="Recorded in Spanish">{LANGUAGE_FLAGS[sourceLang] ?? "🌐"}</span>
+          )}
           {log.isNew && <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />}
         </div>
         <div className="text-neutral-600">{log.activity}</div>
@@ -224,8 +252,38 @@ export function LogRow({
               </div>
             )}
             <div className="mt-4">
-              <div className="text-xs font-semibold text-neutral-500">Summary</div>
-              <p className="mt-1 text-sm text-neutral-600">&ldquo;{log.transcript}&rdquo;</p>
+              <div className="flex items-center justify-between">
+                <div className="text-xs font-semibold text-neutral-500">
+                  Summary {isForeignLanguage && !showTranslation && "(Spanish)"}
+                </div>
+                {isForeignLanguage && (
+                  <button
+                    type="button"
+                    disabled={translating}
+                    onClick={() => (translated ? setShowTranslation((v) => !v) : handleTranslate())}
+                    className="flex items-center gap-1 rounded-full border border-neutral-300 bg-white px-2.5 py-1 text-[11px] font-medium text-neutral-700 hover:bg-neutral-50 disabled:opacity-60"
+                  >
+                    {translating ? (
+                      <Loader2 size={11} className="animate-spin" />
+                    ) : (
+                      <Languages size={11} />
+                    )}
+                    {translating
+                      ? "Translating..."
+                      : translated
+                        ? showTranslation
+                          ? "Show Original"
+                          : "Show English"
+                        : "Translate to English"}
+                  </button>
+                )}
+              </div>
+              <p className="mt-1 text-sm text-neutral-600">
+                &ldquo;{showTranslation && translated ? translated : log.transcript}&rdquo;
+              </p>
+              {translateError && (
+                <p className="mt-1 text-xs text-red-600">{translateError}</p>
+              )}
             </div>
 
             <div className="mt-4">

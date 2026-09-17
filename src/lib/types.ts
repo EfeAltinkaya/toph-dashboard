@@ -11,6 +11,8 @@ export type LogWithRelations = {
   audioUrl: string;
   photoUrl: string | null;
   transcript: string;
+  language: string;
+  translated: string | null;
   lat: number;
   lng: number;
   tags: { id: number; name: string }[];

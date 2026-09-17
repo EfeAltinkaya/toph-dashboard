@@ -19,6 +19,7 @@ export async function createLog(input: {
   transcript: string;
   audioUrl: string;
   photoUrl?: string | null;
+  language: string;
   accuracy: number;
 }) {
   await requireUser();
@@ -45,6 +46,7 @@ export async function createLog(input: {
       audioUrl: input.audioUrl,
       photoUrl: input.photoUrl || null,
       transcript: input.transcript || "(no transcript captured)",
+      language: input.language,
       lat,
       lng,
     },
