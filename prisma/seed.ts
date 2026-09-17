@@ -1,13 +1,16 @@
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import dotenv from "dotenv";
+import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { FIELD_COORDS, FIELD_NAMES } from "../src/lib/fields";
 import { ACTIVITIES } from "../src/lib/constants";
 import { extractLogFields } from "../src/lib/extract";
 
-const adapter = new PrismaBetterSqlite3({
-  url: process.env.DATABASE_URL || "file:./dev.db",
-});
-const prisma = new PrismaClient({ adapter });
+// Run directly with tsx, so the env files have to be loaded by hand.
+dotenv.config({ path: [".env.local", ".env"] });
+const connectionString = process.env.DATABASE_URL;
+if (!connectionString) throw new Error("DATABASE_URL env var is not set");
+
+const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString }) });
 
 const TAG_NAMES = ["Needs Review", "Verified", "Flagged", "Follow-up"];
 
@@ -183,6 +186,14 @@ async function main() {
   await prisma.tag.deleteMany();
   await prisma.employee.deleteMany();
 
+  // The farm a worker joins with a code. Upserted rather than recreated so
+  // re-seeding demo logs never invalidates a code already handed out.
+  const farm = await prisma.farm.upsert({
+    where: { joinCode: "BAYRANCH" },
+    update: {},
+    create: { name: "Bay Ranch", joinCode: "BAYRANCH" },
+  });
+
   const tags = await Promise.all(
     TAG_NAMES.map((name) => prisma.tag.create({ data: { name } }))
   );
@@ -251,7 +262,9 @@ async function main() {
     }
   }
 
-  console.log(`Seeded ${employees.length} employees and ${logIndex} logs.`);
+  console.log(
+    `Seeded ${employees.length} employees, ${logIndex} logs, and farm "${farm.name}" (join code: ${farm.joinCode}).`
+  );
 }
 
 main()

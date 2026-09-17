@@ -6,8 +6,12 @@ generator client {
   output   = "../src/generated/prisma"
 }
 
+// Postgres in every environment, including local dev. Prisma's migration
+// SQL is provider-specific, so keeping SQLite locally and Postgres in
+// production would mean two migration histories that can drift apart —
+// the classic "worked on my machine" failure. One provider, one history.
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
 }
 
 model User {

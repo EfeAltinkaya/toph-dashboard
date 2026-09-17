@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma migrate deploy && next build",
     "start": "next start",
     "lint": "eslint",
     "postinstall": "prisma generate",
@@ -12,15 +12,15 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@prisma/adapter-better-sqlite3": "^7.10.0",
+    "@prisma/adapter-pg": "^7.10.0",
     "@prisma/client": "^7.10.0",
     "bcryptjs": "^3.0.3",
-    "better-sqlite3": "^13.0.3",
     "jose": "^6.2.12",
     "leaflet": "^1.9.4",
     "lucide-react": "^1.46.0",
     "motion": "^13.4.0",
     "next": "16.3.5",
+    "pg": "^8.23.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "react-leaflet": "^5.0.0",
@@ -31,6 +31,7 @@
     "@types/bcryptjs": "^2.4.6",
     "@types/leaflet": "^1.9.22",
     "@types/node": "^20",
+    "@types/pg": "^8.23.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "dotenv": "^17.4.2",
@@ -44,8 +45,6 @@
     "vitest": "^2.1.9"
   },
   "allowScripts": {
-    "better-sqlite3@12.11.1": true,
-    "better-sqlite3@13.0.3": true,
     "@prisma/engines@7.10.0": true,
     "prisma@7.10.0": true,
     "unrs-resolver@1.12.2": true,
