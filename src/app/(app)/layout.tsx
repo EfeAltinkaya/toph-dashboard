@@ -20,7 +20,10 @@ export default async function AppLayout({
   return (
     <div className="flex min-h-screen bg-accent-25">
       <Sidebar user={{ name: user.name, avatarUrl: user.avatarUrl }} newLogCount={newLogCount} />
-      <div className="flex-1">{children}</div>
+      {/* min-w-0: without it, a flex child grows to its content's width, so
+          one wide table (the use report) would push the whole page
+          sideways instead of scrolling inside its own container. */}
+      <div className="min-w-0 flex-1">{children}</div>
     </div>
   );
 }
