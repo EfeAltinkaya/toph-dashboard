@@ -102,6 +102,43 @@ export function farmDayOffset(
   return farmDayStart(farmDayKey(noonish, timeZone), timeZone);
 }
 
+/** "10:00 AM", "1:30 PM" or "13:30" -> minutes past midnight. */
+export function parseClockTime(value: string): number | null {
+  const match = /^\s*(\d{1,2}):(\d{2})\s*(AM|PM)?\s*$/i.exec(value);
+  if (!match) return null;
+  const [, rawHour, rawMinute, meridiem] = match;
+  let hour = Number(rawHour);
+  const minute = Number(rawMinute);
+  if (minute > 59) return null;
+  if (meridiem) {
+    if (hour < 1 || hour > 12) return null;
+    const pm = meridiem.toUpperCase() === "PM";
+    hour = hour === 12 ? (pm ? 12 : 0) : pm ? hour + 12 : hour;
+  } else if (hour > 23) {
+    return null;
+  }
+  return hour * 60 + minute;
+}
+
+/**
+ * The instant for a calendar day plus a wall-clock time at the farm, used
+ * when a manager edits a log's date or start time by hand.
+ *
+ * Editing used to store farm midnight and keep the start time only as a
+ * display string, which quietly moved every edited log to the top of its
+ * day and broke any ordering or "today" check that read the timestamp.
+ * The two have to stay the same moment.
+ */
+export function farmDateAt(
+  dateStr: string,
+  time: string,
+  timeZone = FARM_TIME_ZONE
+): Date {
+  const start = farmDayStart(dateStr, timeZone);
+  const minutes = parseClockTime(time);
+  return minutes === null ? start : new Date(start.getTime() + minutes * 60000);
+}
+
 export function formatTime(date: Date, timeZone = FARM_TIME_ZONE): string {
   return date.toLocaleTimeString("en-US", {
     timeZone,

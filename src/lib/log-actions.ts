@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/session";
 import { coordsForField } from "@/lib/fields";
-import { farmDayStart, formatTime } from "@/lib/date-utils";
+import { farmDateAt, formatTime } from "@/lib/date-utils";
 import { extractLogFields } from "@/lib/extract";
 
 async function requireUser() {
@@ -142,7 +142,9 @@ export async function updateLog(
       employeeId: employee.id,
       activity: input.activity,
       field: input.field,
-      date: farmDayStart(input.date),
+      // The edited day and the edited start time are one moment, so the
+      // timestamp keeps the time of day instead of collapsing to midnight.
+      date: farmDateAt(input.date, input.startTime),
       startTime: input.startTime,
       endTime: input.endTime,
       lat,

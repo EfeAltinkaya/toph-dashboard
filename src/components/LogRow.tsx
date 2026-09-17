@@ -16,14 +16,17 @@ import { useI18n } from "@/i18n/I18nProvider";
 import { format, errorText, tr } from "@/i18n";
 import { localeFor } from "@/i18n/config";
 import type { LogWithRelations, TagOption } from "@/lib/types";
-import { FARM_TIME_ZONE } from "@/lib/date-utils";
+import { FARM_TIME_ZONE, farmDayKey } from "@/lib/date-utils";
 
 const GRID_COLS = "grid-cols-[24px_1.6fr_1.2fr_1.3fr_0.9fr_1.4fr_1fr]";
 
 const LANGUAGE_FLAGS: Record<string, string> = { es: "🇪🇸", en: "🇺🇸" };
 
+// The farm’s calendar day, not UTC’s. Reading it in UTC put an evening
+// log on tomorrow’s date in the edit box, so saving without changing
+// anything moved the log forward a day and out of today’s list.
 function toDateInputValue(date: Date) {
-  return date.toISOString().slice(0, 10);
+  return farmDayKey(date);
 }
 
 export function LogRow({

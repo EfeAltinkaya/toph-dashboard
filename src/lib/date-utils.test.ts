@@ -1,10 +1,12 @@
 import { describe, it, expect } from "vitest";
 import {
   FARM_TIME_ZONE,
+  farmDateAt,
   farmDayKey,
   farmDayOffset,
   farmDayStart,
   formatTime,
+  parseClockTime,
   startOfFarmDay,
 } from "./date-utils";
 
@@ -53,6 +55,39 @@ describe("farm-local time", () => {
     const dayAfter = farmDayOffset(next, 1);
     expect(farmDayKey(dayAfter)).toBe("2026-03-09");
     expect(dayAfter.getTime() - next.getTime()).toBe(23 * 3600000);
+  });
+
+  it("reads a clock time the way a manager types it", () => {
+    expect(parseClockTime("10:00 AM")).toBe(600);
+    expect(parseClockTime("1:30 PM")).toBe(810);
+    expect(parseClockTime("12:00 AM")).toBe(0);
+    expect(parseClockTime("12:15 PM")).toBe(735);
+    expect(parseClockTime("13:30")).toBe(810);
+    expect(parseClockTime("not a time")).toBeNull();
+    expect(parseClockTime("10:99 AM")).toBeNull();
+  });
+
+  it("survives an edit that changes nothing", () => {
+    // The bug this covers: the edit form filled its date box from the UTC
+    // date and saved back farm midnight, so opening a 6 PM log and pressing
+    // Save moved it to the next day at midnight and it vanished from today.
+    const original = new Date("2026-09-18T01:00:00Z"); // 6 PM on the 17th
+    const formDate = farmDayKey(original);
+    expect(formDate).toBe("2026-09-17");
+    const startTime = formatTime(original);
+    expect(startTime).toBe("6:00 PM");
+    expect(farmDateAt(formDate, startTime).toISOString()).toBe(original.toISOString());
+  });
+
+  it("keeps the timestamp and the displayed start time in agreement", () => {
+    const saved = farmDateAt("2026-09-14", "10:00 AM");
+    expect(formatTime(saved)).toBe("10:00 AM");
+    expect(farmDayKey(saved)).toBe("2026-09-14");
+  });
+
+  it("falls back to the start of the day when the time is unreadable", () => {
+    const saved = farmDateAt("2026-09-14", "sometime after lunch");
+    expect(saved.toISOString()).toBe(farmDayStart("2026-09-14").toISOString());
   });
 
   it("pins the zone rather than following the machine running the code", () => {
