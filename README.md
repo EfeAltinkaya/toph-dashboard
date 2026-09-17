@@ -31,6 +31,8 @@ Voice recording needs Chrome or Edge (Web Speech API). Everywhere else the recor
 | Voice input | **MediaRecorder + Web Speech API** | Real recording with live speech-to-text built into the browser: no API key, no per-minute billing, and the audio stays on the page until the log is saved. |
 | Transcript parsing | **Deterministic parser** (`src/lib/extract.ts`) | Product, target, and rate are pulled out with rules, not an LLM, so the same sentence always yields the same record and the extraction is unit-testable. Handles spoken numbers in English and Spanish ("twenty-four ounces", "veinticuatro onzas"). |
 | i18n | **Cookie-based, server-rendered** | The language cookie is read on the server, so the first HTML response is already in the right language and `<html lang>` matches. localStorage would have meant a flash of English and a hydration mismatch. `es` is typed as `Dictionary`, so a missing translation is a build error. |
+| Time | **One farm timezone, not the server's or the viewer's** | Vercel's functions run in UTC, so a log recorded at 1:47 PM in California was first stamped 8:47 PM. Every timestamp and day boundary now resolves in the farm's zone, which is also the right unit for a record a manager in another state and an auditor next year both have to read the same way. |
+| Location | **Device GPS with a fallback** | A log carries the worker's real fix when they allow it, and the block's known coordinates when they don't. The record states which, instead of showing every pin as though it were measured. |
 | Map | **react-leaflet + Esri World Imagery** | A real pannable satellite map with no API key. |
 | Motion | **`motion`** | Scroll-linked progress and reveals, with `useReducedMotion` respected throughout. |
 | Hosting | **Vercel** | Built by the Next.js team; the build step runs `prisma migrate deploy` so the database schema and the code deploy together. |
@@ -54,7 +56,11 @@ BriefingRequest
 
 **Marketing site** (`/`, `/product`, `/use-cases`, `/company`): a live hero demo where you speak into the page and watch a compliance record assemble itself, scroll-driven field illustrations, a scan grid over real aerial photography, and a briefing form that writes to the database.
 
-**Worker screen** (`/log`): record by voice and watch it transcribe live, or use the Type tab. On save, the transcript is parsed into a structured record and checked against compliance rules.
+**Worker screen** (`/log`): record by voice and watch it transcribe live, or use the Type tab. On save, the transcript is parsed into a structured record and checked against compliance rules. A worker can attach a real GPS fix with one tap (nothing is requested on page load, since a permission prompt before the worker has done anything is the fastest way to get it denied for good), and picks the application method when the activity applied a product.
+
+**Use Report** (manager): the document the farm actually has to produce. Every product application as one line, with the fields California requires on a monthly pesticide use report: operator and site ID, crop, acres treated, product and EPA registration number, rate, total applied over the block, target pest, application method, restricted-entry interval, applicator, and whether the location was GPS-verified or fell back to the block's coordinates. Filter by month or block, export to CSV, or print it as a signed document with letterhead.
+
+Underneath it, an **audit checklist** scored from those records rather than filled in by hand: eleven yes/no items, each 0 or 1, with the offending record named in the comments column. The farm sees its own gaps before an auditor does. In the demo data it scores 9 of 11, and the two failures are real: one off-label application and one record without a GPS fix.
 
 **Dashboard** (manager): live stat cards and this-month table; Activity Logs; Map with every field plotted; Audit Manager for flagged logs; Reports by activity and field; Schedule by day; Employees with per-person log counts and average accuracy; Performance; a shared Messages board; Settings; Support.
 
@@ -62,7 +68,7 @@ Every log row expands to audio playback, the transcript, its translation, the pa
 
 **Compliance checks** (`src/lib/compliance.ts`) return keys, not sentences, so the same check renders in English or Spanish. One seeded log is deliberately non-compliant (Regalia applied for aphids, which it isn't labeled for) because a demo where every record passes doesn't show the point.
 
-**Tests**: 42 unit tests over the transcript parser, compliance rules, auth schemas, date handling, field data, and the translation dictionaries (`npm test`).
+**Tests**: 65 unit tests over the transcript parser, compliance rules, the use report (rate multiplied over acreage, checklist scoring, CSV quoting), farm-local time including daylight saving, auth schemas, field data, and the translation dictionaries (`npm test`).
 
 ## Running locally
 
