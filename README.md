@@ -14,7 +14,7 @@ The problem it's built around: agriculture is one of the most heavily regulated 
 | Worker | Sign up at `/signup`, choose Worker, join code `BAYRANCH` → single log screen |
 | Language | The EN/ES toggle in the header of every screen, marketing and app |
 
-A manager account can be created at `/signup` with no code. A worker account needs the farm's join code, so nobody can enroll themselves as staff.
+Signing up as a manager creates a **new farm** and generates its join code; signing up as a worker joins an existing farm by typing that code. Each farm is a tenant: accounts, employees, logs and messages all carry a farm id, every query filters on it, and the id comes from the session rather than from anything the client sends. Two people can try the live app at the same time without landing in each other's records.
 
 Voice recording needs Chrome or Edge (Web Speech API). Everywhere else the recorder falls back to a transcript box, and the Type tab works in any browser.
 
@@ -27,6 +27,7 @@ Voice recording needs Chrome or Edge (Web Speech API). Everywhere else the recor
 | ORM | **Prisma 7 with driver adapters** | Prisma 7 ships no bundled query engine: the driver is passed in explicitly (`@prisma/adapter-pg` + `pg`), which is what keeps it working in a serverless runtime. |
 | Database | **Supabase Postgres** | Postgres in every environment, including local dev. Prisma's migration SQL is provider-specific, so keeping SQLite locally would mean two migration histories that drift, the classic "worked on my machine" bug. The app connects through the transaction pooler (port 6543) because serverless functions open far more connections than Postgres will hold; migrations use the session pooler (5432), which supports the advisory locks and DDL a transaction pooler does not. |
 | Auth | **Custom session auth** (bcrypt + `jose`-signed httpOnly cookie + a `Session` DB row) | Follows the Next.js team's documented pattern (Data Access Layer plus proxy for optimistic redirects) instead of trusting a third-party library's Next 16 compatibility. Sessions are DB rows referenced by a signed cookie, never the raw id, so any session can be revoked server-side. |
+| Tenancy | **One farm id, taken from the session** | Every dashboard query filters on the signed-in account's farm, and writes use `updateMany`/`deleteMany` so the farm stays in the WHERE clause: a record id from another farm matches nothing rather than being edited. A server action is a public endpoint, so an id in its arguments is a request, not a permission. |
 | Rate limiting | **`LoginAttempt` rows, not memory** | Each serverless request may run on a different short-lived instance, so an in-memory counter would silently stop protecting anything the moment it deployed. |
 | Voice input | **MediaRecorder + Web Speech API** | Real recording with live speech-to-text built into the browser: no API key, no per-minute billing, and the audio stays on the page until the log is saved. |
 | Transcript parsing | **Deterministic parser** (`src/lib/extract.ts`) | Product, target, and rate are pulled out with rules, not an LLM, so the same sentence always yields the same record and the extraction is unit-testable. Handles spoken numbers in English and Spanish ("twenty-four ounces", "veinticuatro onzas"). |
@@ -40,14 +41,13 @@ Voice recording needs Chrome or Edge (Web Speech API). Everywhere else the recor
 ## Data model
 
 ```
-User 1---* Session          Farm (join code)
-User 1---* Message          LoginAttempt
-Employee 1---* EmployeeLog *---* Tag
-BriefingRequest
+Farm 1---* User 1---* Session
+Farm 1---* Employee 1---* EmployeeLog *---* Tag
+Farm 1---* Message            LoginAttempt, BriefingRequest
 ```
 
 - **User**: `role` is `manager` or `worker`. A manager gets the dashboard; a worker gets one screen for logging activity and nothing else, matching the real product's split and meaning a worker cannot see anyone else's data.
-- **Farm**: the join code a worker signs up with.
+- **Farm**: the tenant. A manager creates one at signup and gets its join code; workers join with it. Employee names are unique per farm rather than globally, since two farms can both employ a Maria Lopez.
 - **EmployeeLog**: one logged activity: type, field, date, start/end time, a transcription-confidence score, the audio, the transcript, the language it was spoken in, an optional translation, `(lat, lng)` for the map, and the structured `product` / `target` / `rate` parsed out of the transcript. `source` records whether it was spoken or typed, because a typed entry is the worker's own words and a voice one is parsed.
 - **Tag**: `Needs Review`, `Verified`, `Flagged`, `Follow-up`, many-to-many with logs. Tagged logs surface under Audit Manager.
 - **BriefingRequest**: submissions from the public Request a Briefing form, a genuine write rather than a form that goes nowhere.
@@ -68,7 +68,7 @@ Every log row expands to audio playback, the transcript, its translation, the pa
 
 **Compliance checks** (`src/lib/compliance.ts`) return keys, not sentences, so the same check renders in English or Spanish. One seeded log is deliberately non-compliant (Regalia applied for aphids, which it isn't labeled for) because a demo where every record passes doesn't show the point.
 
-**Tests**: 65 unit tests over the transcript parser, compliance rules, the use report (rate multiplied over acreage, checklist scoring, CSV quoting), farm-local time including daylight saving, auth schemas, field data, and the translation dictionaries (`npm test`).
+**Tests**: 66 unit tests over the transcript parser, compliance rules, the use report (rate multiplied over acreage, checklist scoring, CSV quoting), farm-local time including daylight saving, auth schemas, field data, and the translation dictionaries (`npm test`).
 
 ## Running locally
 
