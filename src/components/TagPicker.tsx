@@ -3,6 +3,8 @@
 import { useState, useTransition } from "react";
 import { Star, X } from "lucide-react";
 import { toggleLogTag } from "@/app/actions";
+import { useI18n } from "@/i18n/I18nProvider";
+import { tr } from "@/i18n";
 
 export function TagPicker({
   logId,
@@ -13,6 +15,7 @@ export function TagPicker({
   allTags: { id: number; name: string }[];
   activeTagIds: number[];
 }) {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
@@ -24,14 +27,14 @@ export function TagPicker({
         className="flex w-full items-center justify-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 py-2 text-sm font-medium text-emerald-700 hover:bg-emerald-100"
       >
         <Star size={14} />
-        Add Tag
+        {t.logs.addTag}
       </button>
 
       {open && (
         <div className="absolute z-10 mt-2 w-56 rounded-xl border border-neutral-200 bg-white p-2 shadow-lg">
           <div className="flex items-center justify-between px-1 pb-1">
             <span className="text-xs font-semibold text-neutral-500">
-              Tags
+              {t.logs.tags}
             </span>
             <button
               type="button"
@@ -59,7 +62,7 @@ export function TagPicker({
                     : "text-neutral-600 hover:bg-neutral-50"
                 }`}
               >
-                {tag.name}
+                {tr(t.vocab.tags, tag.name)}
                 {active && <span className="text-xs">✓</span>}
               </button>
             );

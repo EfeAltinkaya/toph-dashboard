@@ -3,6 +3,9 @@
 import { useState, useTransition } from "react";
 import { Pencil, Check, X, UserPlus, Trash2 } from "lucide-react";
 import { addEmployee, renameEmployee, deleteEmployee } from "@/lib/employee-actions";
+import { useI18n } from "@/i18n/I18nProvider";
+import { errorText, format } from "@/i18n";
+import { localeFor } from "@/i18n/config";
 
 type EmployeeRow = {
   id: number;
@@ -12,13 +15,14 @@ type EmployeeRow = {
   lastActive: Date | null;
 };
 
-const dateFormatter = new Intl.DateTimeFormat("en-US", {
-  month: "short",
-  day: "numeric",
-  year: "numeric",
-});
-
 export function EmployeesTable({ employees }: { employees: EmployeeRow[] }) {
+  const { lang, t } = useI18n();
+  const e = t.pages.employees;
+  const dateFormatter = new Intl.DateTimeFormat(localeFor(lang), {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
   const [adding, setAdding] = useState(false);
   const [newName, setNewName] = useState("");
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -44,11 +48,16 @@ export function EmployeesTable({ employees }: { employees: EmployeeRow[] }) {
   }
 
   function handleDelete(emp: EmployeeRow) {
-    if (!confirm(`Delete ${emp.name}?`)) return;
+    if (!confirm(format(e.confirmDelete, { name: emp.name }))) return;
     setDeleteError(null);
     startTransition(async () => {
       const result = await deleteEmployee(emp.id);
-      if (result.error) setDeleteError({ id: emp.id, message: result.error });
+      if (result.error) {
+        const message = format(errorText(t, result.error) ?? result.error, {
+          count: result.count ?? 0,
+        });
+        setDeleteError({ id: emp.id, message });
+      }
     });
   }
 
@@ -56,7 +65,7 @@ export function EmployeesTable({ employees }: { employees: EmployeeRow[] }) {
     <div className="rounded-2xl border border-neutral-200 bg-white">
       <div className="flex items-center justify-between border-b border-neutral-100 px-4 py-3">
         <div className="text-sm font-semibold text-neutral-900">
-          Employees ({employees.length})
+          {format(e.tableTitle, { count: employees.length })}
         </div>
         {!adding ? (
           <button
@@ -64,7 +73,7 @@ export function EmployeesTable({ employees }: { employees: EmployeeRow[] }) {
             onClick={() => setAdding(true)}
             className="flex items-center gap-1.5 rounded-full bg-accent px-3 py-1.5 text-xs font-medium text-white hover:opacity-90"
           >
-            <UserPlus size={13} /> Add Employee
+            <UserPlus size={13} /> {e.add}
           </button>
         ) : (
           <div className="flex items-center gap-1.5">
@@ -73,7 +82,7 @@ export function EmployeesTable({ employees }: { employees: EmployeeRow[] }) {
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && submitAdd()}
-              placeholder="Full name"
+              placeholder={e.fullName}
               className="rounded-lg border border-neutral-300 px-2 py-1 text-sm"
             />
             <button
@@ -96,10 +105,10 @@ export function EmployeesTable({ employees }: { employees: EmployeeRow[] }) {
       </div>
 
       <div className="grid grid-cols-6 gap-3 px-4 py-2 text-[11px] font-semibold tracking-wider text-neutral-400 uppercase">
-        <div>Name</div>
-        <div>Logs</div>
-        <div>Avg. Accuracy</div>
-        <div>Last Active</div>
+        <div>{t.fields.name}</div>
+        <div>{e.logs}</div>
+        <div>{e.avgAccuracy}</div>
+        <div>{e.lastActive}</div>
         <div></div>
         <div></div>
       </div>
@@ -161,7 +170,7 @@ export function EmployeesTable({ employees }: { employees: EmployeeRow[] }) {
               <button
                 type="button"
                 onClick={() => handleDelete(emp)}
-                title="Delete"
+                title={e.delete}
                 className="rounded-full border border-neutral-300 bg-white p-1.5 text-red-500 hover:bg-red-50"
               >
                 <Trash2 size={13} />

@@ -7,23 +7,14 @@ import {
   WheatSprig,
   Windmill,
 } from "@/components/marketing/FarmIllustrations";
+import { getI18n } from "@/i18n/server";
 
-const VALUES = [
-  {
-    title: "The field comes first.",
-    body: "Every decision starts with whether it makes a worker's day easier, not whether it makes a report look more impressive.",
-  },
-  {
-    title: "Language shouldn't be a barrier to being believed.",
-    body: "A log recorded in Spanish is exactly as valid as one recorded in English. Translation exists so the office understands, not so the worker has to accommodate.",
-  },
-  {
-    title: "Compliance should be a byproduct, not a chore.",
-    body: "If keeping a record takes more effort than doing the work itself, most people won't keep it. Toph exists to close that gap.",
-  },
-];
+const VALUES = ["field", "language", "byproduct"] as const;
 
-export default function CompanyPage() {
+export default async function CompanyPage() {
+  const { t } = await getI18n();
+  const c = t.company;
+
   return (
     <div>
       <section className="relative isolate overflow-hidden bg-soil px-6 pt-20 pb-32 text-center">
@@ -31,32 +22,27 @@ export default function CompanyPage() {
         <WheatSprig className="pointer-events-none absolute top-1/2 right-6 z-0 h-36 w-auto -translate-y-1/2 scale-x-[-1] text-harvest/40 sm:right-16" />
         <RollingHills className="pointer-events-none absolute inset-x-0 bottom-0 z-0 block h-14 w-full text-wheat sm:h-20" />
         <div className="relative z-10 font-eyebrow text-[11px] tracking-widest text-harvest uppercase">
-          Company
+          {c.eyebrow}
         </div>
         <h1 className="relative z-10 mx-auto mt-4 max-w-2xl font-display text-5xl text-wheat">
-          Contextualizing farm compliance, one conversation at a time.
+          {c.title}
         </h1>
-        <p className="relative z-10 mx-auto mt-5 max-w-xl text-wheat/70">
-          Agriculture is one of the most heavily regulated industries in the
-          United States, yet most farms still rely on fragmented, manual
-          systems using paper logs. We think the fix starts with how the
-          record gets made, not with another form.
-        </p>
+        <p className="relative z-10 mx-auto mt-5 max-w-xl text-wheat/70">{c.body}</p>
       </section>
 
       <div className="px-6 pt-16">
         <figure className="mx-auto max-w-6xl">
           <div className="relative aspect-[21/9] overflow-hidden rounded-3xl">
             <Image
-              src={PHOTOS.tendingCrops.src}
-              alt={PHOTOS.tendingCrops.alt}
+              src={PHOTOS.tendingCrops}
+              alt={t.photos.tendingCrops}
               fill
               sizes="(min-width: 1152px) 1104px, 100vw"
               className="object-cover"
             />
           </div>
           <figcaption className="mt-3 font-eyebrow text-[11px] tracking-widest text-soil/45 uppercase">
-            The record starts here, not in the office.
+            {c.photoCaption}
           </figcaption>
         </figure>
       </div>
@@ -70,10 +56,10 @@ export default function CompanyPage() {
             </div>
           </div>
           <div className="space-y-12">
-            {VALUES.map((v, i) => (
-              <Reveal key={v.title} delay={i * 0.08}>
-                <h2 className="font-display text-2xl text-soil">{v.title}</h2>
-                <p className="mt-2 text-soil/60">{v.body}</p>
+            {VALUES.map((key, i) => (
+              <Reveal key={key} delay={i * 0.08}>
+                <h2 className="font-display text-2xl text-soil">{c[key].title}</h2>
+                <p className="mt-2 text-soil/60">{c[key].body}</p>
               </Reveal>
             ))}
           </div>
@@ -82,11 +68,7 @@ export default function CompanyPage() {
 
       <Reveal>
         <section className="border-t border-soil/10 px-6 py-16 text-center">
-          <p className="mx-auto max-w-xl text-sm text-soil/50">
-            This build of Toph was made as a developer take-home for LavaLab,
-            USC&apos;s engineering entrepreneurship club, inspired by the real
-            Toph, a Spring 2026 LavaLab startup solving exactly this problem.
-          </p>
+          <p className="mx-auto max-w-xl text-sm text-soil/50">{c.note}</p>
         </section>
       </Reveal>
     </div>

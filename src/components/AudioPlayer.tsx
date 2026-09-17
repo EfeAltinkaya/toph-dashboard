@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { Play, Pause } from "lucide-react";
+import { useI18n } from "@/i18n/I18nProvider";
 
 // Deterministic pseudo-random bar heights per log, so each row's waveform
 // looks distinct even though they all currently point at the same placeholder
@@ -23,6 +24,7 @@ export function AudioPlayer({
   audioUrl: string;
   seed: number;
 }) {
+  const { t } = useI18n();
   const audioRef = useRef<HTMLAudioElement>(null);
   const [playing, setPlaying] = useState(false);
   const bars = waveformBars(seed);
@@ -61,7 +63,7 @@ export function AudioPlayer({
         className="mt-2 flex w-full items-center justify-center gap-2 rounded-full border border-neutral-300 bg-white py-2 text-sm font-medium text-neutral-900 hover:bg-neutral-50"
       >
         {playing ? <Pause size={14} /> : <Play size={14} />}
-        {playing ? "Pause Recording" : "Play Recording"}
+        {playing ? t.logs.pauseRecording : t.logs.playRecording}
       </button>
     </div>
   );

@@ -4,12 +4,12 @@ import * as z from "zod";
 import { prisma } from "@/lib/prisma";
 
 const BriefingSchema = z.object({
-  firstName: z.string().trim().min(1, "Enter your first name."),
-  lastName: z.string().trim().min(1, "Enter your last name."),
-  email: z.email("Enter a valid work email."),
-  company: z.string().trim().min(1, "Enter your company or farm name."),
-  responsibility: z.string().trim().min(1, "Select a responsibility."),
-  context: z.string().trim().min(1, "Tell us a bit about what you need."),
+  firstName: z.string().trim().min(1, "firstNameRequired"),
+  lastName: z.string().trim().min(1, "lastNameRequired"),
+  email: z.email("workEmailInvalid"),
+  company: z.string().trim().min(1, "companyRequired"),
+  responsibility: z.string().trim().min(1, "responsibilityRequired"),
+  context: z.string().trim().min(1, "contextRequired"),
 });
 
 export type BriefingFormState = { error?: string; success?: boolean } | undefined;

@@ -12,15 +12,12 @@ import { translateLog } from "@/lib/translate-actions";
 import { ACTIVITIES } from "@/lib/constants";
 import { FIELD_NAMES } from "@/lib/fields";
 import { resizeImageFile } from "@/lib/image";
+import { useI18n } from "@/i18n/I18nProvider";
+import { format, errorText, tr } from "@/i18n";
+import { localeFor } from "@/i18n/config";
 import type { LogWithRelations, TagOption } from "@/lib/types";
 
 const GRID_COLS = "grid-cols-[24px_1.6fr_1.2fr_1.3fr_0.9fr_1.4fr_1fr]";
-
-const dateFormatter = new Intl.DateTimeFormat("en-US", {
-  month: "long",
-  day: "numeric",
-  year: "numeric",
-});
 
 const LANGUAGE_FLAGS: Record<string, string> = { es: "🇪🇸", en: "🇺🇸" };
 
@@ -39,6 +36,12 @@ export function LogRow({
   expanded: boolean;
   onToggle: () => void;
 }) {
+  const { lang, t } = useI18n();
+  const dateFormatter = new Intl.DateTimeFormat(localeFor(lang), {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
   const [mapOpen, setMapOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -91,7 +94,7 @@ export function LogRow({
   }
 
   function handleDelete() {
-    if (!confirm(`Delete this log for ${log.employee.name}? This can't be undone.`)) {
+    if (!confirm(format(t.logs.confirmDelete, { name: log.employee.name }))) {
       return;
     }
     startTransition(() => {
@@ -115,7 +118,7 @@ export function LogRow({
           value={form.employeeName}
           onChange={(e) => setForm((f) => ({ ...f, employeeName: e.target.value }))}
           className="rounded-lg border border-neutral-300 px-2 py-1.5 text-sm"
-          placeholder="Employee name"
+          placeholder={t.logs.employeeName}
         />
         <select
           value={form.activity}
@@ -124,7 +127,7 @@ export function LogRow({
         >
           {ACTIVITIES.map((a) => (
             <option key={a} value={a}>
-              {a}
+              {tr(t.vocab.activities, a)}
             </option>
           ))}
         </select>
@@ -141,7 +144,7 @@ export function LogRow({
         >
           {FIELD_NAMES.map((f) => (
             <option key={f} value={f}>
-              {f}
+              {tr(t.vocab.fields, f)}
             </option>
           ))}
         </select>
@@ -167,14 +170,14 @@ export function LogRow({
             onClick={saveEdit}
             className="flex items-center gap-1 rounded-full bg-accent px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 disabled:opacity-60"
           >
-            <Check size={12} /> Save
+            <Check size={12} /> {t.logs.save}
           </button>
           <button
             type="button"
             onClick={() => setEditing(false)}
             className="flex items-center gap-1 rounded-full border border-neutral-300 bg-white px-3 py-1.5 text-xs font-medium text-neutral-900 hover:bg-neutral-50"
           >
-            <X size={12} /> Cancel
+            <X size={12} /> {t.logs.cancel}
           </button>
         </div>
       </div>
@@ -192,13 +195,13 @@ export function LogRow({
         <div className="flex items-center gap-2 font-medium text-neutral-900">
           {log.employee.name}
           {isForeignLanguage && (
-            <span title="Recorded in Spanish">{LANGUAGE_FLAGS[sourceLang] ?? "🌐"}</span>
+            <span title={t.logs.recordedInSpanish}>{LANGUAGE_FLAGS[sourceLang] ?? "🌐"}</span>
           )}
           {log.isNew && <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />}
         </div>
-        <div className="text-neutral-600">{log.activity}</div>
+        <div className="text-neutral-600">{tr(t.vocab.activities, log.activity)}</div>
         <div className="text-neutral-600">{dateFormatter.format(log.date)}</div>
-        <div className="text-neutral-600 uppercase">{log.field}</div>
+        <div className="text-neutral-600 uppercase">{tr(t.vocab.fields, log.field)}</div>
         <div className="text-neutral-600">
           {log.startTime} - {log.endTime}
         </div>
@@ -206,7 +209,7 @@ export function LogRow({
           <button
             type="button"
             onClick={() => setEditing(true)}
-            title="Edit"
+            title={t.logs.edit}
             className="rounded-full border border-neutral-300 bg-white p-1.5 text-neutral-600 hover:bg-neutral-50"
           >
             <Pencil size={13} />
@@ -214,7 +217,7 @@ export function LogRow({
           <button
             type="button"
             onClick={handleDelete}
-            title="Delete"
+            title={t.logs.delete}
             className="rounded-full border border-neutral-300 bg-white p-1.5 text-red-500 hover:bg-red-50"
           >
             <Trash2 size={13} />
@@ -224,7 +227,7 @@ export function LogRow({
             onClick={handleToggle}
             className="rounded-full border border-neutral-300 bg-white px-3 py-1.5 text-xs font-medium text-neutral-900 hover:bg-neutral-50"
           >
-            {expanded ? "Close" : "View"}
+            {expanded ? t.logs.close : t.logs.view}
           </button>
         </div>
       </div>
@@ -239,7 +242,7 @@ export function LogRow({
               <AudioPlayer audioUrl={log.audioUrl} seed={log.id} />
             ) : (
               <div className="rounded-xl border border-neutral-200 bg-white px-4 py-3 text-xs text-neutral-500">
-                Typed entry — no recording attached.
+                {t.logs.typedEntry}
               </div>
             )}
             <div className="mt-2">
@@ -264,7 +267,8 @@ export function LogRow({
             <div className="mt-4">
               <div className="flex items-center justify-between">
                 <div className="text-xs font-semibold text-neutral-500">
-                  Summary {isForeignLanguage && !showTranslation && "(Spanish)"}
+                  {t.logs.summary}{" "}
+                  {isForeignLanguage && !showTranslation && t.logs.spanishSuffix}
                 </div>
                 {isForeignLanguage && (
                   <button
@@ -279,12 +283,12 @@ export function LogRow({
                       <Languages size={11} />
                     )}
                     {translating
-                      ? "Translating..."
+                      ? t.logs.translating
                       : translated
                         ? showTranslation
-                          ? "Show Original"
-                          : "Show English"
-                        : "Translate to English"}
+                          ? t.logs.showOriginal
+                          : t.logs.showEnglish
+                        : t.logs.translateToEnglish}
                   </button>
                 )}
               </div>
@@ -292,12 +296,12 @@ export function LogRow({
                 &ldquo;{showTranslation && translated ? translated : log.transcript}&rdquo;
               </p>
               {translateError && (
-                <p className="mt-1 text-xs text-red-600">{translateError}</p>
+                <p className="mt-1 text-xs text-red-600">{errorText(t, translateError)}</p>
               )}
             </div>
 
             <div className="mt-4">
-              <div className="text-xs font-semibold text-neutral-500">Photo</div>
+              <div className="text-xs font-semibold text-neutral-500">{t.fields.photo}</div>
               {log.photoUrl && (
                 // eslint-disable-next-line @next/next/no-img-element -- data URL, not an optimizable remote image
                 <img
@@ -308,7 +312,7 @@ export function LogRow({
               )}
               <label className="mt-2 flex w-fit cursor-pointer items-center gap-1.5 rounded-full border border-neutral-300 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-50">
                 <Camera size={13} />
-                {log.photoUrl ? "Replace Photo" : "Add Photo"}
+                {log.photoUrl ? t.logs.replacePhoto : t.logs.addPhoto}
                 <input
                   type="file"
                   accept="image/*"
@@ -325,7 +329,7 @@ export function LogRow({
               <FieldMap
                 lat={log.lat}
                 lng={log.lng}
-                label={log.field}
+                label={tr(t.vocab.fields, log.field)}
                 className="h-48 w-full sm:h-full"
               />
             )}
@@ -335,7 +339,7 @@ export function LogRow({
               className="absolute right-3 bottom-3 z-[400] flex items-center gap-1.5 rounded-full border border-neutral-300 bg-white px-3 py-1.5 text-xs font-medium text-neutral-900 hover:bg-neutral-50"
             >
               <Maximize2 size={12} />
-              Expand Map
+              {t.logs.expandMap}
             </button>
           </div>
           </div>
@@ -353,20 +357,20 @@ export function LogRow({
           >
             <div className="mb-3 flex items-center justify-between">
               <div className="text-sm font-semibold text-neutral-900">
-                {log.field} — {log.employee.name}
+                {tr(t.vocab.fields, log.field)} — {log.employee.name}
               </div>
               <button
                 type="button"
                 onClick={() => setMapOpen(false)}
                 className="rounded-full border border-neutral-300 bg-white px-3 py-1 text-xs font-medium text-neutral-900 hover:bg-neutral-50"
               >
-                Close
+                {t.logs.close}
               </button>
             </div>
             <FieldMap
               lat={log.lat}
               lng={log.lng}
-              label={log.field}
+              label={tr(t.vocab.fields, log.field)}
               interactive
               className="h-[60vh] w-full rounded-xl"
             />

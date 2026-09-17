@@ -8,6 +8,8 @@ import { LocateFixed, Loader2 } from "lucide-react";
 import { FIELD_COORDS } from "@/lib/fields";
 import { createPersonPin, createLiveLocationPin } from "@/lib/mapIcon";
 import { useGeolocation } from "@/hooks/useGeolocation";
+import { useI18n } from "@/i18n/I18nProvider";
+import { format, tr } from "@/i18n";
 
 const pin = createPersonPin();
 const livePin = createLiveLocationPin();
@@ -31,6 +33,8 @@ export function LeafletFarmMap({
 }: {
   fieldCounts: Record<string, number>;
 }) {
+  const { t } = useI18n();
+  const m = t.pages.map;
   const { state: geo, locate } = useGeolocation();
   const entries = Object.entries(FIELD_COORDS);
   const bounds: LatLngBoundsExpression = entries.map(([, c]) => [c.lat, c.lng]);
@@ -47,9 +51,11 @@ export function LeafletFarmMap({
         {entries.map(([name, coords]) => (
           <Marker key={name} position={[coords.lat, coords.lng]} icon={pin}>
             <Popup>
-              <div className="text-sm font-medium">{name}</div>
+              <div className="text-sm font-medium">{tr(t.vocab.fields, name)}</div>
               <div className="text-xs text-neutral-500">
-                {fieldCounts[name] ?? 0} logged {fieldCounts[name] === 1 ? "activity" : "activities"}
+                {fieldCounts[name] === 1
+                  ? m.activityCountOne
+                  : format(m.activityCount, { count: fieldCounts[name] ?? 0 })}
               </div>
             </Popup>
           </Marker>
@@ -64,7 +70,7 @@ export function LeafletFarmMap({
               pathOptions={{ color: "#2563eb", fillOpacity: 0.08, weight: 1 }}
             />
             <Marker position={[geo.lat, geo.lng]} icon={livePin}>
-              <Popup>You are here</Popup>
+              <Popup>{m.youAreHere}</Popup>
             </Marker>
           </>
         )}
@@ -81,16 +87,16 @@ export function LeafletFarmMap({
           ) : (
             <LocateFixed size={13} />
           )}
-          {geo.status === "loading" ? "Locating..." : "Locate Me"}
+          {geo.status === "loading" ? m.locating : m.locateMe}
         </button>
         {geo.status === "denied" && (
           <p className="mt-1.5 max-w-48 rounded-lg bg-white px-2 py-1 text-[11px] text-red-600 shadow-sm">
-            Location permission was denied. Check your browser&apos;s site settings to allow it.
+            {t.errors.locationDenied}
           </p>
         )}
         {geo.status === "unsupported" && (
           <p className="mt-1.5 max-w-48 rounded-lg bg-white px-2 py-1 text-[11px] text-neutral-500 shadow-sm">
-            Your browser doesn&apos;t support geolocation.
+            {t.errors.locationUnsupported}
           </p>
         )}
       </div>

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Fraunces, IBM_Plex_Mono } from "next/font/google";
 import { ThemeInit } from "@/components/ThemeInit";
+import { I18nProvider } from "@/i18n/I18nProvider";
+import { getI18n } from "@/i18n/server";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -34,15 +36,19 @@ export const metadata: Metadata = {
   description: "Farm activity dashboard for Toph.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const { lang } = await getI18n();
+
   return (
     <html
-      lang="en"
+      // Screen readers pick their pronunciation from this, so it has to
+      // follow the chosen language rather than always saying "en".
+      lang={lang}
       className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} ${plexMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-neutral-50 text-neutral-900">
         <ThemeInit />
-        {children}
+        <I18nProvider lang={lang}>{children}</I18nProvider>
       </body>
     </html>
   );

@@ -12,10 +12,10 @@ const TRANSLATE_URL = "https://api.mymemory.translated.net/get";
 
 export async function translateLog(logId: number): Promise<{ error?: string; text?: string }> {
   const user = await getCurrentUser();
-  if (!user) return { error: "Not authenticated" };
+  if (!user) return { error: "notAuthenticated" };
 
   const log = await prisma.employeeLog.findUnique({ where: { id: logId } });
-  if (!log) return { error: "Log not found" };
+  if (!log) return { error: "logNotFound" };
 
   if (log.translated) return { text: log.translated };
 
@@ -27,11 +27,11 @@ export async function translateLog(logId: number): Promise<{ error?: string; tex
     const res = await fetch(url);
     const data = await res.json();
     const text: string | undefined = data?.responseData?.translatedText;
-    if (!text) return { error: "Translation service returned no result." };
+    if (!text) return { error: "translationEmpty" };
 
     await prisma.employeeLog.update({ where: { id: logId }, data: { translated: text } });
     return { text };
   } catch {
-    return { error: "Couldn't reach the translation service. Try again in a moment." };
+    return { error: "translationUnavailable" };
   }
 }

@@ -11,16 +11,16 @@ export async function updateProfile(
   formData: FormData
 ): Promise<ProfileFormState> {
   const user = await getCurrentUser();
-  if (!user) return { error: "Not authenticated." };
+  if (!user) return { error: "notAuthenticated" };
 
   const name = (formData.get("name") as string).trim();
   const email = (formData.get("email") as string).trim();
   const avatarUrl = (formData.get("avatarUrl") as string) || null;
-  if (!name || !email) return { error: "Name and email are required." };
+  if (!name || !email) return { error: "nameAndEmailRequired" };
 
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing && existing.id !== user.id) {
-    return { error: "That email is already in use." };
+    return { error: "emailInUse" };
   }
 
   await prisma.user.update({ where: { id: user.id }, data: { name, email, avatarUrl } });

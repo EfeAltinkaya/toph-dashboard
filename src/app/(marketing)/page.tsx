@@ -1,11 +1,11 @@
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRight, Mic, Languages, MapPin, Camera, MessageSquare, ShieldCheck } from "lucide-react";
 import { getCurrentUser } from "@/lib/session";
 import { prisma } from "@/lib/prisma";
 import { Reveal } from "@/components/marketing/Reveal";
 import { HeroVoiceDemo } from "@/components/marketing/HeroVoiceDemo";
 import { FaqItem } from "@/components/FaqItem";
-import Image from "next/image";
 import {
   CornStalk,
   CropRows,
@@ -17,56 +17,26 @@ import {
 import { FieldStrip } from "@/components/marketing/FieldStrip";
 import { FieldScan } from "@/components/marketing/FieldScan";
 import { PHOTOS } from "@/lib/photos";
+import { getI18n } from "@/i18n/server";
 
 export const dynamic = "force-dynamic";
 
 const FEATURES = [
-  {
-    icon: ShieldCheck,
-    color: "text-crop",
-    ring: "bg-crop/10",
-    title: "Audit-ready tagging",
-    body: "Flag anything that needs a second look, and it surfaces automatically in Audit Manager, already dated and attributed.",
-  },
-  {
-    icon: MapPin,
-    color: "text-clay",
-    ring: "bg-clay/10",
-    title: "Real field locations",
-    body: "Every log is pinned to an actual field on a live satellite map, so the record says exactly where the work happened.",
-  },
-  {
-    icon: Camera,
-    color: "text-harvest",
-    ring: "bg-harvest/15",
-    title: "Photo evidence",
-    body: "Attach a photo straight from the log, so a compliance record isn't just a transcript, it's proof.",
-  },
-  {
-    icon: Mic,
-    color: "text-crop",
-    ring: "bg-crop/10",
-    title: "Hands-free reporting",
-    body: "Workers report what they did by talking, from the field, on their phone, the moment it happens instead of days later on a form.",
-  },
-  {
-    icon: Languages,
-    color: "text-sky",
-    ring: "bg-sky/10",
-    title: "Understands every worker",
-    body: "A log recorded in Spanish is captured just as accurately as one in English, so language is never why a record goes missing.",
-  },
-  {
-    icon: MessageSquare,
-    color: "text-sky",
-    ring: "bg-sky/10",
-    title: "One team board",
-    body: "Post an update the whole crew sees, so coordination doesn't depend on a group text no one reads.",
-  },
-];
+  { key: "tagging", icon: ShieldCheck, color: "text-crop", ring: "bg-crop/10" },
+  { key: "locations", icon: MapPin, color: "text-clay", ring: "bg-clay/10" },
+  { key: "photos", icon: Camera, color: "text-harvest", ring: "bg-harvest/15" },
+  { key: "handsFree", icon: Mic, color: "text-crop", ring: "bg-crop/10" },
+  { key: "languages", icon: Languages, color: "text-sky", ring: "bg-sky/10" },
+  { key: "board", icon: MessageSquare, color: "text-sky", ring: "bg-sky/10" },
+] as const;
+
+const STEPS = ["capture", "structure", "ready"] as const;
+const FAQS = ["replace", "auditReady", "languages", "data", "trial"] as const;
 
 export default async function LandingPage() {
   const user = await getCurrentUser();
+  const { lang, t } = await getI18n();
+  const h = t.home;
   const [logCount, employeeCount, fieldCount] = await Promise.all([
     prisma.employeeLog.count(),
     prisma.employee.count(),
@@ -74,7 +44,7 @@ export default async function LandingPage() {
   ]);
 
   const ctaHref = user ? "/dashboard" : "/signup";
-  const ctaLabel = user ? "Go to Dashboard" : "Get Started";
+  const ctaLabel = user ? h.hero.goToDashboard : h.hero.getStarted;
 
   return (
     <div>
@@ -98,18 +68,13 @@ export default async function LandingPage() {
         <div className="relative mx-auto grid max-w-6xl grid-cols-1 items-center gap-16 lg:grid-cols-2">
           <div>
             <div className="font-eyebrow text-[11px] tracking-widest text-harvest uppercase">
-              Audit-ready, from the moment it happens
+              {h.hero.eyebrow}
             </div>
             <h1 className="mt-4 font-display text-5xl leading-[1.05] text-wheat sm:text-6xl">
-              Turn a season of fieldwork into a{" "}
-              <span className="text-crop italic">record that survives an audit</span>.
+              {h.hero.titleStart}{" "}
+              <span className="text-crop italic">{h.hero.titleEmphasis}</span>.
             </h1>
-            <p className="mt-6 max-w-md text-lg text-wheat/70">
-              Toph captures what happens in the field at the source and turns
-              it into a continuously updated system of record, so a
-              compliance report is something you already have, not something
-              you build the night before an inspection.
-            </p>
+            <p className="mt-6 max-w-md text-lg text-wheat/70">{h.hero.body}</p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <Link
                 href={ctaHref}
@@ -123,12 +88,15 @@ export default async function LandingPage() {
                   href="/login"
                   className="rounded-full border border-wheat/25 px-6 py-3 text-sm font-medium text-wheat hover:bg-wheat/10"
                 >
-                  I already have an account
+                  {h.hero.haveAccount}
                 </Link>
               )}
             </div>
           </div>
-          <HeroVoiceDemo />
+          {/* Keyed by language so switching the page language also resets
+              the demo to that language's examples and recognizer, rather
+              than leaving the card on whatever it mounted with. */}
+          <HeroVoiceDemo key={lang} />
         </div>
       </section>
 
@@ -138,8 +106,8 @@ export default async function LandingPage() {
           <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-2">
             <div className="relative aspect-[4/3] overflow-hidden rounded-3xl">
               <Image
-                src={PHOTOS.workersInField.src}
-                alt={PHOTOS.workersInField.alt}
+                src={PHOTOS.workersInField}
+                alt={t.photos.workersInField}
                 fill
                 sizes="(min-width: 1024px) 560px, 100vw"
                 className="object-cover"
@@ -149,24 +117,16 @@ export default async function LandingPage() {
               <div className="absolute bottom-4 left-4 rounded-2xl bg-wheat/95 px-4 py-3 shadow-lg backdrop-blur">
                 <div className="flex items-center gap-1.5 font-eyebrow text-[10px] tracking-widest text-soil/50 uppercase">
                   <span className="h-1.5 w-1.5 rounded-full bg-crop" />
-                  Voice log captured
+                  {h.problem.chipLabel}
                 </div>
-                <div className="mt-1 text-sm font-medium text-soil">
-                  Field B · Harvest · 6:42 AM
-                </div>
+                <div className="mt-1 text-sm font-medium text-soil">{h.problem.chipValue}</div>
               </div>
             </div>
             <div>
               <p className="font-display text-2xl text-soil italic sm:text-3xl">
-                &ldquo;Agriculture is one of the most heavily regulated
-                industries in the United States, yet most farms still rely on
-                fragmented, manual systems using paper logs.&rdquo;
+                &ldquo;{h.problem.quote}&rdquo;
               </p>
-              <p className="mt-5 text-soil/60">
-                With audits landing 5&ndash;10 times a year, often with little
-                notice, that means hundreds of hours spent reconstructing
-                months of records by hand, pulled straight out of the field.
-              </p>
+              <p className="mt-5 text-soil/60">{h.problem.body}</p>
             </div>
           </div>
         </section>
@@ -177,38 +137,20 @@ export default async function LandingPage() {
         <div className="mx-auto max-w-6xl">
           <Reveal className="mx-auto max-w-2xl text-center">
             <div className="font-eyebrow text-[11px] tracking-widest text-accent uppercase">
-              How Toph works
+              {h.how.eyebrow}
             </div>
-            <h2 className="mt-2 font-display text-4xl text-soil">
-              From what happened in the field to what an auditor can sign off on.
-            </h2>
+            <h2 className="mt-2 font-display text-4xl text-soil">{h.how.title}</h2>
           </Reveal>
           <div className="mt-16 grid grid-cols-1 gap-10 sm:grid-cols-3">
-            {[
-              {
-                n: "01",
-                title: "Capture at the source",
-                body: "A worker reports what they did while they're still in the field, so the record starts as close to the work as possible, not as a memory from later.",
-              },
-              {
-                n: "02",
-                title: "Structure and enrich",
-                body: "Toph processes that report against workflow context and farm data, turning it into a structured log with audit regulations already in mind.",
-              },
-              {
-                n: "03",
-                title: "Audit-ready, always",
-                body: "The result is a continuously updated system of record. When an inspection comes up, nothing has to be reconstructed by hand.",
-              },
-            ].map((step, i) => (
-              <Reveal key={step.n} delay={i * 0.1}>
+            {STEPS.map((step, i) => (
+              <Reveal key={step} delay={i * 0.1}>
                 <GrowthStage stage={(i + 1) as 1 | 2 | 3} className="mb-3 h-12 w-12 text-crop" />
                 <div className="flex items-center gap-2 font-eyebrow text-xs text-soil/40">
-                  <span>{step.n}</span>
+                  <span>0{i + 1}</span>
                   <span className="h-px flex-1 bg-soil/10" />
                 </div>
-                <h3 className="mt-4 font-display text-xl text-soil">{step.title}</h3>
-                <p className="mt-2 text-sm text-soil/60">{step.body}</p>
+                <h3 className="mt-4 font-display text-xl text-soil">{h.how[step].title}</h3>
+                <p className="mt-2 text-sm text-soil/60">{h.how[step].body}</p>
               </Reveal>
             ))}
           </div>
@@ -222,21 +164,19 @@ export default async function LandingPage() {
         <div className="mx-auto max-w-6xl">
           <Reveal className="mx-auto max-w-2xl text-center">
             <div className="font-eyebrow text-[11px] tracking-widest text-accent uppercase">
-              What&apos;s built in
+              {h.features.eyebrow}
             </div>
-            <h2 className="mt-2 font-display text-4xl text-soil">
-              Everything it takes to make the record hold up.
-            </h2>
+            <h2 className="mt-2 font-display text-4xl text-soil">{h.features.title}</h2>
           </Reveal>
           <div className="mt-16 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {FEATURES.map((f, i) => (
-              <Reveal key={f.title} delay={(i % 3) * 0.08}>
+              <Reveal key={f.key} delay={(i % 3) * 0.08}>
                 <div className="h-full rounded-2xl border border-soil/10 bg-wheat p-6">
                   <div className={`flex h-10 w-10 items-center justify-center rounded-full ${f.ring}`}>
                     <f.icon size={18} className={f.color} />
                   </div>
-                  <h3 className="mt-4 font-semibold text-soil">{f.title}</h3>
-                  <p className="mt-1.5 text-sm text-soil/60">{f.body}</p>
+                  <h3 className="mt-4 font-semibold text-soil">{h.features[f.key].title}</h3>
+                  <p className="mt-1.5 text-sm text-soil/60">{h.features[f.key].body}</p>
                 </div>
               </Reveal>
             ))}
@@ -250,20 +190,15 @@ export default async function LandingPage() {
           <CropRows className="pointer-events-none absolute inset-0 h-full w-full text-soil/[0.055] [mask-image:linear-gradient(to_bottom,transparent,black_60%)]" />
           <div className="relative mx-auto max-w-6xl text-center">
             <div className="font-eyebrow text-[11px] tracking-widest text-accent uppercase">
-              Right now, in this demo
+              {h.stats.eyebrow}
             </div>
-            <h2 className="mt-2 font-display text-4xl text-soil">
-              A system of record, not a mockup.
-            </h2>
-            <p className="mx-auto mt-3 max-w-md text-sm text-soil/50">
-              These numbers are pulled live from the same database the
-              dashboard, and any compliance report, reads from.
-            </p>
+            <h2 className="mt-2 font-display text-4xl text-soil">{h.stats.title}</h2>
+            <p className="mx-auto mt-3 max-w-md text-sm text-soil/50">{h.stats.body}</p>
             <div className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-3">
               {[
-                { value: logCount, label: "Logged activities" },
-                { value: employeeCount, label: "Workers tracked" },
-                { value: fieldCount, label: "Fields monitored" },
+                { value: logCount, label: h.stats.logs },
+                { value: employeeCount, label: h.stats.workers },
+                { value: fieldCount, label: h.stats.fields },
               ].map((stat) => (
                 <div key={stat.label} className="rounded-2xl border border-soil/10 bg-wheat p-8">
                   <div className="font-display text-4xl text-accent">{stat.value}</div>
@@ -284,11 +219,10 @@ export default async function LandingPage() {
           <RollingHills className="pointer-events-none absolute inset-x-0 bottom-0 block h-14 w-full text-wheat sm:h-20" />
           <div className="relative mx-auto max-w-3xl text-center">
             <p className="font-display text-2xl text-wheat italic sm:text-3xl">
-              &ldquo;Our last audit used to take a week to prepare for. Now the
-              record is just already there, waiting for someone to ask.&rdquo;
+              &ldquo;{h.testimonial.quote}&rdquo;
             </p>
             <p className="mt-4 font-eyebrow text-xs tracking-widest text-wheat/40 uppercase">
-              Bays Ranch &middot; Admin
+              {h.testimonial.attribution}
             </p>
           </div>
         </section>
@@ -298,30 +232,11 @@ export default async function LandingPage() {
       <Reveal>
         <section className="px-6 py-24">
           <div className="mx-auto max-w-3xl">
-            <h2 className="font-display text-3xl text-soil">
-              Frequently asked questions
-            </h2>
+            <h2 className="font-display text-3xl text-soil">{h.faq.title}</h2>
             <div className="mt-6">
-              <FaqItem
-                question="Does Toph replace our existing systems?"
-                answer="No. Toph sits alongside whatever you already use for scheduling, payroll, or field management, it's the layer that turns what happens in the field into a structured, audit-ready record."
-              />
-              <FaqItem
-                question="What actually makes a log 'audit-ready'?"
-                answer="Every log is enriched with the field, the time, and workflow context, then tagged against the regulations that apply, so it can be handed to an inspector as-is instead of cleaned up first."
-              />
-              <FaqItem
-                question="What languages does Toph support?"
-                answer="Voice logs can be recorded in English or Spanish, so language is never the reason a report doesn't get filed. Anything in Spanish can be translated to English in the dashboard with one click."
-              />
-              <FaqItem
-                question="Who can see the data?"
-                answer="Anyone with a Toph account for your farm has full access to logs, the map, and reports, no separate admin tier hiding information."
-              />
-              <FaqItem
-                question="Can I try it before committing to anything?"
-                answer="Yes, create a free account and you'll have the full dashboard, recording, and reporting tools immediately."
-              />
+              {FAQS.map((key) => (
+                <FaqItem key={key} question={h.faq[key].q} answer={h.faq[key].a} />
+              ))}
             </div>
           </div>
         </section>
@@ -330,13 +245,8 @@ export default async function LandingPage() {
       {/* Final CTA */}
       <section className="px-6 pt-24 pb-2">
         <Reveal className="mx-auto max-w-2xl text-center">
-          <h2 className="font-display text-4xl text-soil">
-            Stop reconstructing the season from memory.
-          </h2>
-          <p className="mt-3 text-soil/60">
-            Set up takes a couple of minutes. Your first field report can be
-            captured before you put your phone down.
-          </p>
+          <h2 className="font-display text-4xl text-soil">{h.finalCta.title}</h2>
+          <p className="mt-3 text-soil/60">{h.finalCta.body}</p>
           <Link
             href={ctaHref}
             className="mt-8 inline-flex items-center gap-1.5 rounded-full bg-accent px-6 py-3 text-sm font-medium text-white hover:opacity-90"

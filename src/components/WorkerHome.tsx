@@ -7,21 +7,20 @@ import { Mic, Keyboard, ClipboardList, LogOut, ExternalLink, ChevronDown } from 
 import { WorkerVoicePanel } from "@/components/WorkerVoicePanel";
 import { WorkerTypePanel } from "@/components/WorkerTypePanel";
 import { ExtractedLogPanel } from "@/components/ExtractedLogPanel";
+import { LanguageToggle } from "@/components/LanguageToggle";
 import { logout } from "@/lib/auth-actions";
+import { useI18n } from "@/i18n/I18nProvider";
+import { format, tr } from "@/i18n";
+import { localeFor } from "@/i18n/config";
 import type { LogWithRelations } from "@/lib/types";
 
 const TABS = [
-  { id: "voice", label: "Voice", icon: Mic },
-  { id: "type", label: "Type", icon: Keyboard },
-  { id: "logs", label: "Logs", icon: ClipboardList },
+  { id: "voice", icon: Mic },
+  { id: "type", icon: Keyboard },
+  { id: "logs", icon: ClipboardList },
 ] as const;
 
 type TabId = (typeof TABS)[number]["id"];
-
-const dateFormatter = new Intl.DateTimeFormat("en-US", {
-  month: "short",
-  day: "numeric",
-});
 
 function isToday(date: Date) {
   const now = new Date();
@@ -33,8 +32,11 @@ function isToday(date: Date) {
 }
 
 function LogsTimeline({ logs }: { logs: LogWithRelations[] }) {
+  const { lang, t } = useI18n();
+  const w = t.worker;
   const [scope, setScope] = useState<"today" | "all">("today");
   const [openId, setOpenId] = useState<number | null>(null);
+  const dateFormatter = new Intl.DateTimeFormat(localeFor(lang), { month: "short", day: "numeric" });
 
   const todayLogs = logs.filter((l) => isToday(new Date(l.date)));
   const shown = scope === "today" ? todayLogs : logs;
@@ -44,8 +46,8 @@ function LogsTimeline({ logs }: { logs: LogWithRelations[] }) {
       <div className="flex items-center gap-4 border-b border-accent-200 pb-2">
         {(
           [
-            ["today", `Today (${todayLogs.length})`],
-            ["all", `All history (${logs.length})`],
+            ["today", format(w.today, { count: todayLogs.length })],
+            ["all", format(w.allHistory, { count: logs.length })],
           ] as const
         ).map(([id, label]) => (
           <button
@@ -65,9 +67,7 @@ function LogsTimeline({ logs }: { logs: LogWithRelations[] }) {
 
       {shown.length === 0 ? (
         <p className="py-10 text-center text-sm text-neutral-500">
-          {scope === "today"
-            ? "Nothing logged today yet. Switch to Voice and say what you're working on."
-            : "No logs yet."}
+          {scope === "today" ? w.emptyToday : w.emptyAll}
         </p>
       ) : (
         // Timeline rather than a stack of cards: a worker's day reads as a
@@ -79,9 +79,12 @@ function LogsTimeline({ logs }: { logs: LogWithRelations[] }) {
               <div className="rounded-2xl border border-accent-200 bg-white p-4">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
-                    <div className="font-semibold text-neutral-900">{log.activity}</div>
+                    <div className="font-semibold text-neutral-900">
+                      {tr(t.vocab.activities, log.activity)}
+                    </div>
                     <div className="mt-0.5 text-sm text-neutral-500">
-                      {log.field} · {log.startTime} · {dateFormatter.format(new Date(log.date))}
+                      {tr(t.vocab.fields, log.field)} · {log.startTime} ·{" "}
+                      {dateFormatter.format(new Date(log.date))}
                     </div>
                   </div>
                   <button
@@ -89,7 +92,7 @@ function LogsTimeline({ logs }: { logs: LogWithRelations[] }) {
                     onClick={() => setOpenId(openId === log.id ? null : log.id)}
                     className="flex items-center gap-1 rounded-full border border-accent-200 px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-accent-25"
                   >
-                    {openId === log.id ? "Hide" : "What was recorded"}
+                    {openId === log.id ? w.hide : w.whatWasRecorded}
                     <ChevronDown
                       size={12}
                       className={`transition-transform ${openId === log.id ? "rotate-180" : ""}`}
@@ -120,6 +123,7 @@ export function WorkerHome({
   farmName: string | null;
   logs: LogWithRelations[];
 }) {
+  const { t } = useI18n();
   const [tab, setTab] = useState<TabId>("voice");
   const router = useRouter();
 
@@ -133,27 +137,32 @@ export function WorkerHome({
   return (
     <div className="min-h-screen bg-accent-25">
       <header className="border-b border-accent-200 bg-white">
-        <div className="mx-auto flex max-w-2xl items-center justify-between px-5 py-3">
-          <div>
+        <div className="mx-auto flex max-w-2xl items-center justify-between gap-3 px-5 py-3">
+          <div className="min-w-0">
             <div className="font-semibold text-neutral-900">Toph</div>
-            <div className="text-xs text-neutral-500">
+            <div className="truncate text-xs text-neutral-500">
               {userName}
               {farmName && ` · ${farmName}`}
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <LanguageToggle />
             <Link
               href="/"
+              aria-label={t.worker.productSite}
               className="flex items-center gap-1.5 rounded-full border border-accent-200 px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-accent-25"
             >
-              <ExternalLink size={13} /> Product site
+              <ExternalLink size={13} />
+              <span className="hidden sm:inline">{t.worker.productSite}</span>
             </Link>
             <form action={logout}>
               <button
                 type="submit"
+                aria-label={t.worker.logOut}
                 className="flex items-center gap-1.5 rounded-full border border-accent-200 px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-accent-25"
               >
-                <LogOut size={13} /> Log out
+                <LogOut size={13} />
+                <span className="hidden sm:inline">{t.worker.logOut}</span>
               </button>
             </form>
           </div>
@@ -165,34 +174,28 @@ export function WorkerHome({
             with three ways in, and keeping them here leaves the thumb
             zone free for the big record button. */}
         <div className="flex gap-1 rounded-full border border-accent-200 bg-white p-1">
-          {TABS.map((t) => {
-            const Icon = t.icon;
-            const active = tab === t.id;
+          {TABS.map((tabDef) => {
+            const Icon = tabDef.icon;
+            const active = tab === tabDef.id;
             return (
               <button
-                key={t.id}
+                key={tabDef.id}
                 type="button"
-                onClick={() => setTab(t.id)}
+                onClick={() => setTab(tabDef.id)}
                 className={`flex flex-1 items-center justify-center gap-1.5 rounded-full py-2 text-sm font-medium transition-colors ${
-                  active
-                    ? "bg-accent text-white"
-                    : "text-neutral-600 hover:bg-accent-25"
+                  active ? "bg-accent text-white" : "text-neutral-600 hover:bg-accent-25"
                 }`}
               >
                 <Icon size={15} />
-                {t.label}
+                {t.worker[tabDef.id]}
               </button>
             );
           })}
         </div>
 
         <div className="mt-5 rounded-3xl border border-accent-200 bg-white p-5">
-          {tab === "voice" && (
-            <WorkerVoicePanel userName={userName} onSaved={handleSaved} />
-          )}
-          {tab === "type" && (
-            <WorkerTypePanel userName={userName} onSaved={handleSaved} />
-          )}
+          {tab === "voice" && <WorkerVoicePanel userName={userName} onSaved={handleSaved} />}
+          {tab === "type" && <WorkerTypePanel userName={userName} onSaved={handleSaved} />}
           {tab === "logs" && <LogsTimeline logs={logs} />}
         </div>
       </main>

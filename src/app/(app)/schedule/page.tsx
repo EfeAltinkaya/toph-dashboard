@@ -1,15 +1,18 @@
 import { prisma } from "@/lib/prisma";
+import { getI18n } from "@/i18n/server";
+import { format, tr } from "@/i18n";
+import { localeFor } from "@/i18n/config";
 
 export const dynamic = "force-dynamic";
 
-const dateFormatter = new Intl.DateTimeFormat("en-US", {
-  weekday: "long",
-  month: "long",
-  day: "numeric",
-  year: "numeric",
-});
-
 export default async function SchedulePage() {
+  const { lang, t } = await getI18n();
+  const dateFormatter = new Intl.DateTimeFormat(localeFor(lang), {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
   const logs = await prisma.employeeLog.findMany({
     include: { employee: true },
     orderBy: { date: "desc" },
@@ -26,10 +29,8 @@ export default async function SchedulePage() {
   return (
     <div className="flex-1 p-8">
       <div>
-        <h1 className="text-2xl font-semibold text-surface">Schedule</h1>
-        <p className="text-sm text-surface/60">
-          Activity grouped by day, most recent first.
-        </p>
+        <h1 className="text-2xl font-semibold text-surface">{t.pages.schedule.title}</h1>
+        <p className="text-sm text-surface/60">{t.pages.schedule.subtitle}</p>
       </div>
 
       <div className="mt-6 space-y-6">
@@ -46,7 +47,13 @@ export default async function SchedulePage() {
                 >
                   <div>
                     <span className="font-medium text-neutral-900">{log.employee.name}</span>
-                    <span className="text-neutral-500"> — {log.activity} at {log.field}</span>
+                    <span className="text-neutral-500">
+                      {" "}
+                      {format(t.pages.schedule.entry, {
+                        activity: tr(t.vocab.activities, log.activity),
+                        field: tr(t.vocab.fields, log.field),
+                      })}
+                    </span>
                   </div>
                   <div className="text-neutral-500">
                     {log.startTime} - {log.endTime}

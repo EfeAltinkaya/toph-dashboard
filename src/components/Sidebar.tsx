@@ -19,40 +19,44 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { logout } from "@/lib/auth-actions";
+import { LanguageToggle } from "@/components/LanguageToggle";
+import { useI18n } from "@/i18n/I18nProvider";
 
+// Section and item labels are dictionary keys; the sidebar looks them up so
+// the whole nav switches language with the rest of the app.
 const NAV_SECTIONS = [
   {
-    label: "Overview",
+    label: "overview",
     items: [
-      { label: "Dashboard", href: "/dashboard", icon: ChartLine },
-      { label: "Activity Logs", href: "/activity-logs", icon: AudioLines },
-      { label: "Map", href: "/map", icon: MapIcon },
+      { label: "dashboard", href: "/dashboard", icon: ChartLine },
+      { label: "activityLogs", href: "/activity-logs", icon: AudioLines },
+      { label: "map", href: "/map", icon: MapIcon },
     ],
   },
   {
-    label: "Compliance",
+    label: "compliance",
     items: [
-      { label: "Audit Manager", href: "/audit-manager", icon: ShieldCheck },
-      { label: "Reports", href: "/reports", icon: FileText },
-      { label: "Schedule", href: "/schedule", icon: CalendarClock },
+      { label: "auditManager", href: "/audit-manager", icon: ShieldCheck },
+      { label: "reports", href: "/reports", icon: FileText },
+      { label: "schedule", href: "/schedule", icon: CalendarClock },
     ],
   },
   {
-    label: "Team Management",
+    label: "team",
     items: [
-      { label: "Employees", href: "/employees", icon: Users },
-      { label: "Performance", href: "/performance", icon: TrendingUp },
-      { label: "Messages", href: "/messages", icon: MessageSquare },
+      { label: "employees", href: "/employees", icon: Users },
+      { label: "performance", href: "/performance", icon: TrendingUp },
+      { label: "messages", href: "/messages", icon: MessageSquare },
     ],
   },
   {
-    label: "Other",
+    label: "other",
     items: [
-      { label: "Settings", href: "/settings", icon: Settings },
-      { label: "Support", href: "/support", icon: LifeBuoy },
+      { label: "settings", href: "/settings", icon: Settings },
+      { label: "support", href: "/support", icon: LifeBuoy },
     ],
   },
-];
+] as const;
 
 export function Sidebar({
   user,
@@ -62,6 +66,7 @@ export function Sidebar({
   newLogCount: number;
 }) {
   const pathname = usePathname();
+  const { t } = useI18n();
   const initials = user.name
     .split(" ")
     .map((p) => p[0])
@@ -85,10 +90,8 @@ export function Sidebar({
             )}
           </div>
           <div className="min-w-0 flex-1">
-            <div className="truncate text-sm font-semibold text-surface">
-              {user.name}
-            </div>
-            <div className="text-xs text-surface/55">Admin</div>
+            <div className="truncate text-sm font-semibold text-surface">{user.name}</div>
+            <div className="text-xs text-surface/55">{t.sidebar.role}</div>
           </div>
           <ChevronsUpDown size={16} className="shrink-0 text-surface/40" />
         </Link>
@@ -97,7 +100,7 @@ export function Sidebar({
           {NAV_SECTIONS.map((section) => (
             <div key={section.label}>
               <div className="px-2 pb-1 text-[10px] font-semibold tracking-wider text-surface/40 uppercase">
-                {section.label}
+                {t.sidebar[section.label]}
               </div>
               <div className="space-y-0.5">
                 {section.items.map((item) => {
@@ -115,7 +118,7 @@ export function Sidebar({
                       }`}
                     >
                       <Icon size={16} className="shrink-0" />
-                      <span className="flex-1 truncate">{item.label}</span>
+                      <span className="flex-1 truncate">{t.sidebar[item.label]}</span>
                       {isDashboard && newLogCount > 0 && (
                         <span className="flex h-4 min-w-4 items-center justify-center rounded-full border border-[#006939]/25 bg-[#019C25]/50 px-1 text-[10px] font-semibold text-white">
                           {newLogCount}
@@ -130,13 +133,16 @@ export function Sidebar({
         </nav>
       </div>
 
-      <div className="space-y-0.5 border-t border-accent-200 pt-3">
+      <div className="space-y-2 border-t border-accent-200 pt-3">
+        <div className="px-2">
+          <LanguageToggle tone="app" />
+        </div>
         <Link
           href="/"
           className="flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-sm text-surface hover:bg-accent-100"
         >
           <ExternalLink size={16} />
-          <span>Product site</span>
+          <span>{t.sidebar.productSite}</span>
         </Link>
         <form action={logout}>
           <button
@@ -144,7 +150,7 @@ export function Sidebar({
             className="flex w-full items-center gap-2.5 rounded-lg px-2 py-1.5 text-left text-sm text-surface hover:bg-accent-100"
           >
             <LogOut size={16} />
-            <span>Log Out</span>
+            <span>{t.sidebar.logOut}</span>
           </button>
         </form>
       </div>

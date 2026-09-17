@@ -7,8 +7,13 @@ import { ACTIVITIES, LANGUAGES } from "@/lib/constants";
 import { FIELD_NAMES } from "@/lib/fields";
 import { resizeImageFile } from "@/lib/image";
 import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
+import { useI18n } from "@/i18n/I18nProvider";
+import { errorText, format, tr } from "@/i18n";
 
 const BAR_COUNT = 24;
+const SELECT =
+  "mt-1 w-full rounded-xl border border-accent-200 bg-white px-3 py-2.5 text-sm disabled:opacity-60";
+const LABEL = "font-eyebrow text-[10px] tracking-widest text-neutral-500 uppercase";
 
 function Equalizer() {
   return (
@@ -35,9 +40,12 @@ export function WorkerVoicePanel({
   userName: string;
   onSaved: () => void;
 }) {
+  const { lang: pageLang, t } = useI18n();
+  const w = t.worker;
   const [activity, setActivity] = useState<string>(ACTIVITIES[0]);
   const [field, setField] = useState(FIELD_NAMES[0]);
-  const [language, setLanguage] = useState<string>(LANGUAGES[0].code);
+  // A worker who switched the app to Spanish almost certainly speaks it.
+  const [language, setLanguage] = useState<string>(pageLang === "es" ? "es-ES" : LANGUAGES[0].code);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const recorder = useVoiceRecorder();
@@ -68,56 +76,52 @@ export function WorkerVoicePanel({
     });
   }
 
+  const languageName = tr(t.vocab.languages, language);
+
   return (
     <div>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <label className="block">
-          <span className="font-eyebrow text-[10px] tracking-widest text-neutral-500 uppercase">
-            Activity
-          </span>
+          <span className={LABEL}>{t.fields.activity}</span>
           <select
             value={activity}
             onChange={(e) => setActivity(e.target.value)}
             disabled={recorder.phase === "recording"}
-            className="mt-1 w-full rounded-xl border border-accent-200 bg-white px-3 py-2.5 text-sm disabled:opacity-60"
+            className={SELECT}
           >
             {ACTIVITIES.map((a) => (
               <option key={a} value={a}>
-                {a}
+                {tr(t.vocab.activities, a)}
               </option>
             ))}
           </select>
         </label>
         <label className="block">
-          <span className="font-eyebrow text-[10px] tracking-widest text-neutral-500 uppercase">
-            Field / block
-          </span>
+          <span className={LABEL}>{t.fields.fieldBlock}</span>
           <select
             value={field}
             onChange={(e) => setField(e.target.value)}
             disabled={recorder.phase === "recording"}
-            className="mt-1 w-full rounded-xl border border-accent-200 bg-white px-3 py-2.5 text-sm disabled:opacity-60"
+            className={SELECT}
           >
             {FIELD_NAMES.map((f) => (
               <option key={f} value={f}>
-                {f}
+                {tr(t.vocab.fields, f)}
               </option>
             ))}
           </select>
         </label>
         <label className="block">
-          <span className="font-eyebrow text-[10px] tracking-widest text-neutral-500 uppercase">
-            Language / idioma
-          </span>
+          <span className={LABEL}>{w.language}</span>
           <select
             value={language}
             onChange={(e) => setLanguage(e.target.value)}
             disabled={recorder.phase === "recording"}
-            className="mt-1 w-full rounded-xl border border-accent-200 bg-white px-3 py-2.5 text-sm disabled:opacity-60"
+            className={SELECT}
           >
             {LANGUAGES.map((l) => (
               <option key={l.code} value={l.code}>
-                {l.label}
+                {tr(t.vocab.languages, l.code)}
               </option>
             ))}
           </select>
@@ -132,11 +136,10 @@ export function WorkerVoicePanel({
               onClick={() => recorder.start(language)}
               className="mx-auto flex w-full max-w-sm items-center justify-center gap-2 rounded-full bg-accent px-6 py-4 text-sm font-semibold text-white shadow-sm transition-transform hover:scale-[1.02]"
             >
-              <Mic size={18} /> Start logging
+              <Mic size={18} /> {w.startLogging}
             </button>
             <p className="mt-3 text-sm text-neutral-500">
-              Just say what you did. You can speak normally, in{" "}
-              {language.startsWith("es") ? "Spanish" : "English"}.
+              {format(w.speakHint, { language: languageName.toLowerCase() })}
             </p>
           </div>
         )}
@@ -145,33 +148,30 @@ export function WorkerVoicePanel({
           <div>
             <Equalizer />
             <p className="mt-3 min-h-12 text-center text-sm text-neutral-700 italic">
-              {recorder.transcript ||
-                (recorder.speechSupported ? "Listening…" : "Recording…")}
+              {recorder.transcript || (recorder.speechSupported ? w.listening : w.recording)}
             </p>
             <button
               type="button"
               onClick={recorder.stop}
               className="mx-auto mt-3 flex w-full max-w-sm items-center justify-center gap-2 rounded-full bg-red-600 px-6 py-3.5 text-sm font-semibold text-white hover:bg-red-700"
             >
-              <Square size={15} /> Stop
+              <Square size={15} /> {w.stop}
             </button>
           </div>
         )}
 
         {recorder.phase === "stopped" && (
           <div>
-            {recorder.audioUrl && (
-              <audio src={recorder.audioUrl} controls className="w-full" />
-            )}
-            <label className="mt-4 block font-eyebrow text-[10px] tracking-widest text-neutral-500 uppercase">
-              What you said
-              {!recorder.speechSupported && " — type it in, this browser can't transcribe"}
+            {recorder.audioUrl && <audio src={recorder.audioUrl} controls className="w-full" />}
+            <label className={`mt-4 block ${LABEL}`}>
+              {w.whatYouSaid}
+              {!recorder.speechSupported && w.cantTranscribe}
             </label>
             <textarea
               value={recorder.transcript}
               onChange={(e) => recorder.setTranscript(e.target.value)}
               rows={3}
-              placeholder="e.g. Sprayed Serenade ASO on Field A for aphids, 24 ounces per acre."
+              placeholder={w.voicePlaceholder}
               className="mt-1 w-full rounded-xl border border-accent-200 bg-white px-3 py-2.5 text-sm"
             />
 
@@ -182,7 +182,7 @@ export function WorkerVoicePanel({
               )}
               <label className="flex cursor-pointer items-center gap-1.5 rounded-full border border-accent-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-accent-25">
                 <Camera size={13} />
-                {photoUrl ? "Retake photo" : "Add photo"}
+                {photoUrl ? w.retakePhoto : w.addPhoto}
                 <input
                   type="file"
                   accept="image/*"
@@ -196,7 +196,7 @@ export function WorkerVoicePanel({
                 onClick={() => recorder.reset()}
                 className="flex items-center gap-1.5 rounded-full border border-accent-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-accent-25"
               >
-                <RotateCcw size={13} /> Record again
+                <RotateCcw size={13} /> {w.recordAgain}
               </button>
             </div>
 
@@ -207,13 +207,13 @@ export function WorkerVoicePanel({
               className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-accent py-3.5 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60"
             >
               {isPending ? <Loader2 size={15} className="animate-spin" /> : <Check size={15} />}
-              {isPending ? "Sending to the office…" : "Submit log"}
+              {isPending ? w.sending : w.submit}
             </button>
           </div>
         )}
       </div>
 
-      {recorder.error && <p className="mt-3 text-sm text-red-600">{recorder.error}</p>}
+      {recorder.error && <p className="mt-3 text-sm text-red-600">{errorText(t, recorder.error)}</p>}
     </div>
   );
 }

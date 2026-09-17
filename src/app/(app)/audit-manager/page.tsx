@@ -1,4 +1,6 @@
 import { prisma } from "@/lib/prisma";
+import { getI18n } from "@/i18n/server";
+import { format, tr } from "@/i18n";
 import { LogsTable } from "@/components/LogsTable";
 
 export const dynamic = "force-dynamic";
@@ -6,6 +8,11 @@ export const dynamic = "force-dynamic";
 const AUDIT_TAGS = ["Needs Review", "Flagged"];
 
 export default async function AuditManagerPage() {
+  const { t } = await getI18n();
+  const tagNames = {
+    needsReview: tr(t.vocab.tags, "Needs Review"),
+    flagged: tr(t.vocab.tags, "Flagged"),
+  };
   const [logs, tags] = await Promise.all([
     prisma.employeeLog.findMany({
       where: { tags: { some: { name: { in: AUDIT_TAGS } } } },
@@ -18,24 +25,23 @@ export default async function AuditManagerPage() {
   return (
     <div className="flex-1 p-8">
       <div>
-        <h1 className="text-2xl font-semibold text-surface">Audit Manager</h1>
+        <h1 className="text-2xl font-semibold text-surface">{t.pages.auditManager.title}</h1>
         <p className="text-sm text-surface/60">
-          Logs tagged &ldquo;Needs Review&rdquo; or &ldquo;Flagged&rdquo; for compliance follow-up.
+          {format(t.pages.auditManager.subtitle, tagNames)}
         </p>
       </div>
 
       <div className="mt-6">
         {logs.length === 0 ? (
           <div className="rounded-2xl border border-neutral-200 bg-white px-4 py-10 text-center text-sm text-neutral-400">
-            Nothing flagged right now. Tag a log &ldquo;Needs Review&rdquo; or &ldquo;Flagged&rdquo; from the
-            dashboard to see it here.
+            {format(t.pages.auditManager.empty, tagNames)}
           </div>
         ) : (
           <LogsTable
             logs={logs}
             allTags={tags}
             defaultDateRange="all"
-            title="Flagged Logs"
+            title={t.pages.auditManager.tableTitle}
           />
         )}
       </div>

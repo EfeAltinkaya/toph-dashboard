@@ -7,6 +7,8 @@ import { ACTIVITIES, LANGUAGES } from "@/lib/constants";
 import { FIELD_NAMES } from "@/lib/fields";
 import { resizeImageFile } from "@/lib/image";
 import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
+import { useI18n } from "@/i18n/I18nProvider";
+import { errorText, tr } from "@/i18n";
 
 export function RecordLogModal({
   employeeNames,
@@ -20,10 +22,12 @@ export function RecordLogModal({
   // their own activity, not anyone else's.
   lockedEmployeeName?: string;
 }) {
+  const { lang: pageLang, t } = useI18n();
+  const r = t.recordModal;
   const [employeeName, setEmployeeName] = useState(lockedEmployeeName ?? employeeNames[0] ?? "");
   const [activity, setActivity] = useState<string>(ACTIVITIES[0]);
   const [field, setField] = useState(FIELD_NAMES[0]);
-  const [language, setLanguage] = useState<string>(LANGUAGES[0].code);
+  const [language, setLanguage] = useState<string>(pageLang === "es" ? "es-ES" : LANGUAGES[0].code);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const recorder = useVoiceRecorder();
@@ -63,7 +67,7 @@ export function RecordLogModal({
       >
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-neutral-900">
-            Record a New Log
+            {r.title}
           </h2>
           <button
             type="button"
@@ -77,14 +81,14 @@ export function RecordLogModal({
         <div className="grid grid-cols-2 gap-3">
           {!lockedEmployeeName && (
             <div className="col-span-2">
-              <label className="text-xs font-medium text-neutral-500">Employee</label>
+              <label className="text-xs font-medium text-neutral-500">{t.fields.employee}</label>
               <input
                 list="employee-options"
                 value={employeeName}
                 onChange={(e) => setEmployeeName(e.target.value)}
                 disabled={recorder.phase === "recording"}
                 className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm disabled:bg-neutral-50"
-                placeholder="Type a name (new or existing)"
+                placeholder={r.employeePlaceholder}
               />
               <datalist id="employee-options">
                 {employeeNames.map((name) => (
@@ -94,7 +98,7 @@ export function RecordLogModal({
             </div>
           )}
           <div>
-            <label className="text-xs font-medium text-neutral-500">Activity</label>
+            <label className="text-xs font-medium text-neutral-500">{t.fields.activity}</label>
             <select
               value={activity}
               onChange={(e) => setActivity(e.target.value)}
@@ -103,13 +107,13 @@ export function RecordLogModal({
             >
               {ACTIVITIES.map((a) => (
                 <option key={a} value={a}>
-                  {a}
+                  {tr(t.vocab.activities, a)}
                 </option>
               ))}
             </select>
           </div>
           <div>
-            <label className="text-xs font-medium text-neutral-500">Field</label>
+            <label className="text-xs font-medium text-neutral-500">{t.fields.field}</label>
             <select
               value={field}
               onChange={(e) => setField(e.target.value)}
@@ -118,14 +122,14 @@ export function RecordLogModal({
             >
               {FIELD_NAMES.map((f) => (
                 <option key={f} value={f}>
-                  {f}
+                  {tr(t.vocab.fields, f)}
                 </option>
               ))}
             </select>
           </div>
           <div className="col-span-2">
             <label className="text-xs font-medium text-neutral-500">
-              Spoken Language
+              {r.spokenLanguage}
             </label>
             <select
               value={language}
@@ -135,12 +139,12 @@ export function RecordLogModal({
             >
               {LANGUAGES.map((l) => (
                 <option key={l.code} value={l.code}>
-                  {l.label}
+                  {tr(t.vocab.languages, l.code)}
                 </option>
               ))}
             </select>
             <p className="mt-1 text-[11px] text-neutral-400">
-              Sets what the recognizer listens for. Logs in Spanish can be translated to English afterward.
+              {r.languageHint}
             </p>
           </div>
         </div>
@@ -152,7 +156,7 @@ export function RecordLogModal({
               onClick={() => recorder.start(language)}
               className="flex w-full items-center justify-center gap-2 rounded-full bg-accent py-2.5 text-sm font-medium text-white hover:opacity-90"
             >
-              <Mic size={16} /> Start Recording
+              <Mic size={16} /> {r.startRecording}
             </button>
           )}
 
@@ -160,17 +164,17 @@ export function RecordLogModal({
             <div>
               <div className="flex items-center justify-center gap-2 text-sm text-red-600">
                 <span className="h-2 w-2 animate-pulse rounded-full bg-red-500" />
-                Recording...
+                {r.recording}
               </div>
               <p className="mt-2 min-h-10 text-sm text-neutral-600 italic">
-                {recorder.transcript || (recorder.speechSupported ? "Listening..." : "")}
+                {recorder.transcript || (recorder.speechSupported ? r.listening : "")}
               </p>
               <button
                 type="button"
                 onClick={recorder.stop}
                 className="mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-red-600 py-2.5 text-sm font-medium text-white hover:bg-red-700"
               >
-                <Square size={14} /> Stop Recording
+                <Square size={14} /> {r.stopRecording}
               </button>
             </div>
           )}
@@ -181,20 +185,19 @@ export function RecordLogModal({
                 <audio src={recorder.audioUrl} controls className="w-full" />
               )}
               <label className="mt-3 block text-xs font-medium text-neutral-500">
-                Transcript{" "}
-                {!recorder.speechSupported &&
-                  "(live transcription needs Chrome or Edge — type it manually)"}
+                {r.transcript}{" "}
+                {!recorder.speechSupported && r.transcriptUnsupported}
               </label>
               <textarea
                 value={recorder.transcript}
                 onChange={(e) => recorder.setTranscript(e.target.value)}
                 rows={3}
                 className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm"
-                placeholder="What happened in this log?"
+                placeholder={r.transcriptPlaceholder}
               />
 
               <label className="mt-3 block text-xs font-medium text-neutral-500">
-                Photo (optional)
+                {r.photoOptional}
               </label>
               <div className="mt-1 flex items-center gap-3">
                 {photoUrl && (
@@ -207,7 +210,7 @@ export function RecordLogModal({
                 )}
                 <label className="flex cursor-pointer items-center gap-1.5 rounded-full border border-neutral-300 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-50">
                   <Camera size={13} />
-                  {photoUrl ? "Retake" : "Add Photo"}
+                  {photoUrl ? r.retake : r.addPhoto}
                   <input
                     type="file"
                     accept="image/*"
@@ -225,13 +228,15 @@ export function RecordLogModal({
                 className="mt-3 flex w-full items-center justify-center gap-2 rounded-full bg-accent py-2.5 text-sm font-medium text-white hover:opacity-90 disabled:opacity-60"
               >
                 {isPending ? <Loader2 size={14} className="animate-spin" /> : null}
-                {isPending ? "Saving..." : "Save Log"}
+                {isPending ? r.saving : r.saveLog}
               </button>
             </div>
           )}
         </div>
 
-        {recorder.error && <p className="mt-3 text-sm text-red-600">{recorder.error}</p>}
+        {recorder.error && (
+          <p className="mt-3 text-sm text-red-600">{errorText(t, recorder.error)}</p>
+        )}
       </div>
     </div>
   );

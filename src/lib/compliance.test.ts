@@ -9,8 +9,8 @@ const base = {
   rate: null as string | null,
 };
 
-function statusFor(checks: ReturnType<typeof complianceChecks>, label: string) {
-  return checks.find((c) => c.label === label)?.status;
+function statusFor(checks: ReturnType<typeof complianceChecks>, id: string) {
+  return checks.find((c) => c.id === id)?.status;
 }
 
 describe("complianceChecks", () => {
@@ -32,8 +32,8 @@ describe("complianceChecks", () => {
       target: "aphids",
       rate: "1 qt/acre",
     });
-    expect(statusFor(checks, "Target on product label")).toBe("fail");
-    expect(statusFor(checks, "Product on approved list")).toBe("pass");
+    expect(statusFor(checks, "targetOnLabel")).toBe("fail");
+    expect(statusFor(checks, "productApproved")).toBe("pass");
   });
 
   it("flags a product the farm hasn't approved", () => {
@@ -43,7 +43,7 @@ describe("complianceChecks", () => {
       target: "aphids",
       rate: "4 oz/acre",
     });
-    expect(statusFor(checks, "Product on approved list")).toBe("fail");
+    expect(statusFor(checks, "productApproved")).toBe("fail");
   });
 
   it("flags a missing application rate", () => {
@@ -52,17 +52,17 @@ describe("complianceChecks", () => {
       product: "Serenade ASO",
       target: "aphids",
     });
-    expect(statusFor(checks, "Application rate recorded")).toBe("fail");
+    expect(statusFor(checks, "rateRecorded")).toBe("fail");
   });
 
   it("skips label checks entirely when no product was applied", () => {
     const checks = complianceChecks(base);
-    expect(statusFor(checks, "No product applied")).toBe("info");
+    expect(statusFor(checks, "noProduct")).toBe("info");
     expect(checks.some((c) => c.status === "fail")).toBe(false);
   });
 
   it("fails when the field or start time is missing", () => {
     const checks = complianceChecks({ ...base, field: "" });
-    expect(statusFor(checks, "Field and timing recorded")).toBe("fail");
+    expect(statusFor(checks, "fieldTiming")).toBe("fail");
   });
 });

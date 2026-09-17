@@ -12,23 +12,25 @@ import {
 } from "lucide-react";
 import { LogRow, GRID_COLS } from "@/components/LogRow";
 import { RecordLogModal } from "@/components/RecordLogModal";
+import { useI18n } from "@/i18n/I18nProvider";
+import { tr } from "@/i18n";
 import type { LogWithRelations, TagOption } from "@/lib/types";
 
 type DateRange = "all" | "week" | "month";
-
-const HEADERS = ["", "Employee", "Activity", "Date", "Field", "Time", ""];
 
 export function LogsTable({
   logs,
   allTags,
   defaultDateRange = "month",
-  title = "New Employee Logs",
+  title,
 }: {
   logs: LogWithRelations[];
   allTags: TagOption[];
   defaultDateRange?: DateRange;
   title?: string;
 }) {
+  const { t } = useI18n();
+  const headers = ["", t.fields.employee, t.fields.activity, t.fields.date, t.fields.field, t.fields.time, ""];
   const [search, setSearch] = useState("");
   const [dateRange, setDateRange] = useState<DateRange>(defaultDateRange);
   const [dateMenuOpen, setDateMenuOpen] = useState(false);
@@ -70,11 +72,14 @@ export function LogsTable({
 
     if (search.trim()) {
       const q = search.trim().toLowerCase();
-      rows = rows.filter(
-        (l) =>
-          l.employee.name.toLowerCase().includes(q) ||
-          l.activity.toLowerCase().includes(q) ||
-          l.field.toLowerCase().includes(q)
+      rows = rows.filter((l) =>
+        [
+          l.employee.name,
+          l.activity,
+          tr(t.vocab.activities, l.activity),
+          l.field,
+          tr(t.vocab.fields, l.field),
+        ].some((value) => value.toLowerCase().includes(q))
       );
     }
 
@@ -85,10 +90,10 @@ export function LogsTable({
     );
 
     return rows;
-  }, [logs, dateRange, activityFilter, search, sortDesc]);
+  }, [logs, dateRange, activityFilter, search, sortDesc, t]);
 
   const dateRangeLabel =
-    dateRange === "month" ? "This Month" : dateRange === "week" ? "This Week" : "All Time";
+    dateRange === "month" ? t.logs.thisMonth : dateRange === "week" ? t.logs.thisWeek : t.logs.allTime;
 
   return (
     <div>
@@ -101,7 +106,7 @@ export function LogsTable({
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search"
+            placeholder={t.logs.search}
             className="w-56 rounded-full border border-neutral-200 bg-white py-2 pr-3 pl-9 text-sm text-neutral-700 placeholder:text-neutral-400 focus:border-neutral-300 focus:outline-none"
           />
         </div>
@@ -111,7 +116,7 @@ export function LogsTable({
           className="flex items-center gap-1.5 rounded-full bg-accent px-4 py-2 text-sm font-medium text-white hover:opacity-90"
         >
           <Mic size={14} />
-          New Log
+          {t.logs.newLog}
         </button>
       </div>
 
@@ -126,21 +131,21 @@ export function LogsTable({
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-t-2xl border-b border-accent-200 bg-accent-25 px-4 py-3">
           <div className="flex items-center gap-1.5 text-sm font-semibold text-surface">
             <AudioLines size={15} className="text-accent" />
-            {title} ({filtered.length})
+            {title ?? t.logs.defaultTitle} ({filtered.length})
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
             <div className="relative">
               {dateRange === "all" ? (
                 <Pill onClick={() => setDateMenuOpen((v) => !v)} icon={<Calendar size={12} />}>
-                  Date
+                  {t.fields.date}
                 </Pill>
               ) : (
                 <ActivePill
                   onClick={() => setDateMenuOpen((v) => !v)}
                   onClear={() => setDateRange("all")}
                 >
-                  Date
+                  {t.fields.date}
                 </ActivePill>
               )}
               {dateMenuOpen && (
@@ -155,10 +160,10 @@ export function LogsTable({
                       }}
                     >
                       {opt === "all"
-                        ? "All Time"
+                        ? t.logs.allTime
                         : opt === "week"
-                          ? "This Week"
-                          : "This Month"}
+                          ? t.logs.thisWeek
+                          : t.logs.thisMonth}
                     </MenuOption>
                   ))}
                 </DropdownMenu>
@@ -166,7 +171,7 @@ export function LogsTable({
             </div>
 
             <Pill onClick={() => setSortDesc((v) => !v)} icon={<SlidersHorizontal size={12} />}>
-              Sort
+              {t.logs.sort}
             </Pill>
 
             {dateRange !== "all" && (
@@ -181,14 +186,14 @@ export function LogsTable({
                   onClick={() => setFilterMenuOpen((v) => !v)}
                   onClear={() => setActivityFilter(null)}
                 >
-                  {activityFilter}
+                  {tr(t.vocab.activities, activityFilter)}
                 </ActivePill>
               ) : (
                 <Pill
                   onClick={() => setFilterMenuOpen((v) => !v)}
                   icon={<FilterIcon size={12} />}
                 >
-                  Filter
+                  {t.logs.filter}
                 </Pill>
               )}
               {filterMenuOpen && (
@@ -200,7 +205,7 @@ export function LogsTable({
                       setFilterMenuOpen(false);
                     }}
                   >
-                    All Activities
+                    {t.logs.allActivities}
                   </MenuOption>
                   {activities.map((activity) => (
                     <MenuOption
@@ -211,7 +216,7 @@ export function LogsTable({
                         setFilterMenuOpen(false);
                       }}
                     >
-                      {activity}
+                      {tr(t.vocab.activities, activity)}
                     </MenuOption>
                   ))}
                 </DropdownMenu>
@@ -223,14 +228,14 @@ export function LogsTable({
         <div
           className={`grid ${GRID_COLS} gap-3 px-4 py-2 text-[11px] font-semibold tracking-wider text-neutral-400 uppercase`}
         >
-          {HEADERS.map((h, i) => (
+          {headers.map((h, i) => (
             <div key={i}>{h}</div>
           ))}
         </div>
 
         {filtered.length === 0 ? (
           <div className="px-4 py-10 text-center text-sm text-neutral-400">
-            No logs match your filters.
+            {t.logs.empty}
           </div>
         ) : (
           filtered.map((log) => (

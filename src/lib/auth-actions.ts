@@ -27,7 +27,7 @@ export async function signup(
 
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
-    return { error: "An account with that email already exists." };
+    return { error: "emailTaken" };
   }
 
   if (role === "worker") {
@@ -35,7 +35,7 @@ export async function signup(
       where: { joinCode: parsed.data.joinCode.trim().toUpperCase() },
     });
     if (!farm) {
-      return { error: "That join code doesn't match a farm. Check with your manager." };
+      return { error: "joinCodeInvalid" };
     }
   }
 
@@ -62,7 +62,7 @@ export async function login(
   const { email, password } = parsed.data;
 
   if (await isRateLimited(email)) {
-    return { error: "Too many failed attempts. Try again in 15 minutes." };
+    return { error: "rateLimited" };
   }
 
   const user = await prisma.user.findUnique({ where: { email } });
@@ -70,7 +70,7 @@ export async function login(
   await recordLoginAttempt(email, !!valid);
 
   if (!valid) {
-    return { error: "Invalid email or password." };
+    return { error: "invalidCredentials" };
   }
 
   await createSession(user.id);
@@ -89,7 +89,7 @@ export async function changePassword(
   formData: FormData
 ): Promise<ChangePasswordState> {
   const user = await getCurrentUser();
-  if (!user) return { error: "Not authenticated." };
+  if (!user) return { error: "notAuthenticated" };
 
   const parsed = ChangePasswordSchema.safeParse({
     currentPassword: formData.get("currentPassword"),
@@ -102,7 +102,7 @@ export async function changePassword(
 
   const isCorrect = await bcrypt.compare(parsed.data.currentPassword, user.passwordHash);
   if (!isCorrect) {
-    return { error: "Current password is incorrect." };
+    return { error: "currentPasswordWrong" };
   }
 
   const passwordHash = await bcrypt.hash(parsed.data.newPassword, 10);

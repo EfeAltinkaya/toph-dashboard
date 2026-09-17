@@ -4,6 +4,8 @@ import { useActionState, useState } from "react";
 import { Camera } from "lucide-react";
 import { updateProfile } from "@/lib/user-actions";
 import { resizeImageFile } from "@/lib/image";
+import { useI18n } from "@/i18n/I18nProvider";
+import { errorText } from "@/i18n";
 
 export function ProfileForm({
   name,
@@ -14,6 +16,7 @@ export function ProfileForm({
   email: string;
   avatarUrl: string | null;
 }) {
+  const { t } = useI18n();
   const [state, action, pending] = useActionState(updateProfile, undefined);
   const [preview, setPreview] = useState(avatarUrl);
 
@@ -42,7 +45,7 @@ export function ProfileForm({
         </div>
         <label className="flex cursor-pointer items-center gap-1.5 rounded-full border border-neutral-300 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 hover:bg-neutral-50">
           <Camera size={13} />
-          Change Photo
+          {t.settings.changePhoto}
           <input type="file" accept="image/*" onChange={handlePhotoChange} className="hidden" />
         </label>
       </div>
@@ -50,7 +53,7 @@ export function ProfileForm({
 
       <div>
         <label className="text-sm font-medium text-neutral-700" htmlFor="name">
-          Name
+          {t.fields.name}
         </label>
         <input
           id="name"
@@ -61,7 +64,7 @@ export function ProfileForm({
       </div>
       <div>
         <label className="text-sm font-medium text-neutral-700" htmlFor="email">
-          Email
+          {t.fields.email}
         </label>
         <input
           id="email"
@@ -71,14 +74,14 @@ export function ProfileForm({
           className="mt-1 w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:border-neutral-500 focus:outline-none"
         />
       </div>
-      {state?.error && <p className="text-sm text-red-600">{state.error}</p>}
-      {state?.success && <p className="text-sm text-emerald-600">Saved.</p>}
+      {state?.error && <p className="text-sm text-red-600">{errorText(t, state.error)}</p>}
+      {state?.success && <p className="text-sm text-emerald-600">{t.settings.saved}</p>}
       <button
         type="submit"
         disabled={pending}
         className="rounded-full bg-accent px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-60"
       >
-        {pending ? "Saving..." : "Save Changes"}
+        {pending ? t.settings.saving : t.settings.saveChanges}
       </button>
     </form>
   );

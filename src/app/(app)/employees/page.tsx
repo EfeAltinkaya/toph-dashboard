@@ -1,9 +1,11 @@
 import { prisma } from "@/lib/prisma";
+import { getI18n } from "@/i18n/server";
 import { EmployeesTable } from "@/components/EmployeesTable";
 
 export const dynamic = "force-dynamic";
 
 export default async function EmployeesPage() {
+  const { t } = await getI18n();
   const employees = await prisma.employee.findMany({
     include: { logs: { select: { accuracy: true, date: true } } },
     orderBy: { name: "asc" },
@@ -23,10 +25,8 @@ export default async function EmployeesPage() {
   return (
     <div className="flex-1 p-8">
       <div>
-        <h1 className="text-2xl font-semibold text-surface">Employees</h1>
-        <p className="text-sm text-surface/60">
-          Everyone logging activity on the farm.
-        </p>
+        <h1 className="text-2xl font-semibold text-surface">{t.pages.employees.title}</h1>
+        <p className="text-sm text-surface/60">{t.pages.employees.subtitle}</p>
       </div>
       <div className="mt-6">
         <EmployeesTable employees={rows} />

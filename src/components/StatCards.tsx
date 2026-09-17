@@ -1,6 +1,8 @@
 import { Calendar, IdCard, Percent } from "lucide-react";
+import { getI18n } from "@/i18n/server";
+import { format } from "@/i18n";
 
-export function StatCards({
+export async function StatCards({
   todaysRecordings,
   newToday,
   activeWorkers,
@@ -11,18 +13,24 @@ export function StatCards({
   activeWorkers: number;
   responseAccuracy: number;
 }) {
+  const { t } = await getI18n();
+
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
       <Card
         icon={<Calendar size={14} />}
-        label="Todays Recordings"
+        label={t.dashboard.todaysRecordings}
         value={todaysRecordings}
-        note={newToday > 0 ? `${newToday} New` : undefined}
+        note={newToday > 0 ? format(t.dashboard.newCount, { count: newToday }) : undefined}
       />
-      <Card icon={<IdCard size={14} />} label="Active Workers" value={activeWorkers} />
+      <Card
+        icon={<IdCard size={14} />}
+        label={t.dashboard.activeWorkers}
+        value={activeWorkers}
+      />
       <Card
         icon={<Percent size={14} />}
-        label="Response Accuracy"
+        label={t.dashboard.responseAccuracy}
         value={responseAccuracy}
       />
     </div>

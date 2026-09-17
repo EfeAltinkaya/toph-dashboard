@@ -1,9 +1,11 @@
 import { prisma } from "@/lib/prisma";
+import { getI18n } from "@/i18n/server";
 import { MessageBoard } from "@/components/MessageBoard";
 
 export const dynamic = "force-dynamic";
 
 export default async function MessagesPage() {
+  const { t } = await getI18n();
   const messages = await prisma.message.findMany({
     include: { author: true },
     orderBy: { createdAt: "asc" },
@@ -13,10 +15,8 @@ export default async function MessagesPage() {
   return (
     <div className="flex-1 p-8">
       <div>
-        <h1 className="text-2xl font-semibold text-surface">Messages</h1>
-        <p className="text-sm text-surface/60">
-          A shared board for the whole team, everyone with an account can post.
-        </p>
+        <h1 className="text-2xl font-semibold text-surface">{t.pages.messages.title}</h1>
+        <p className="text-sm text-surface/60">{t.pages.messages.subtitle}</p>
       </div>
       <div className="mt-6">
         <MessageBoard messages={messages} />

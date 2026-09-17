@@ -30,7 +30,7 @@ export async function renameEmployee(id: number, name: string) {
   revalidatePath("/", "layout");
 }
 
-export type DeleteEmployeeResult = { error?: string };
+export type DeleteEmployeeResult = { error?: "employeeHasLogs" | "employeeHasOneLog"; count?: number };
 
 // Deliberately refuses to delete an employee with existing logs rather than
 // guessing whether to cascade-delete their history or orphan it onto no
@@ -41,11 +41,9 @@ export async function deleteEmployee(id: number): Promise<DeleteEmployeeResult> 
   await requireUser();
   const logCount = await prisma.employeeLog.count({ where: { employeeId: id } });
   if (logCount > 0) {
-    return {
-      error: `Can't delete: this employee has ${logCount} logged ${
-        logCount === 1 ? "activity" : "activities"
-      }. Delete or reassign their logs first.`,
-    };
+    return logCount === 1
+      ? { error: "employeeHasOneLog" }
+      : { error: "employeeHasLogs", count: logCount };
   }
   await prisma.employee.delete({ where: { id } });
   revalidatePath("/employees");

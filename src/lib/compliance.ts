@@ -5,13 +5,18 @@
 // These are derived at render time rather than stored, so editing a log
 // re-runs them immediately and a fix to the approved-product list applies
 // to the whole history at once.
+//
+// Checks return keys and raw values, not sentences: the same check has to
+// read correctly in English and Spanish (see describeCheck in src/i18n).
 import { findApprovedProduct } from "./products";
+import type { Dictionary } from "@/i18n/en";
 
 export type ComplianceCheck = {
-  label: string;
+  id: keyof Dictionary["compliance"]["labels"];
   /** "info" is for checks that don't apply to this log, e.g. no product used. */
   status: "pass" | "fail" | "info";
-  detail?: string;
+  detail: keyof Dictionary["compliance"]["details"];
+  params?: Record<string, string>;
 };
 
 export type ComplianceInput = {
@@ -27,16 +32,17 @@ export function complianceChecks(log: ComplianceInput): ComplianceCheck[] {
 
   checks.push(
     log.field && log.startTime
-      ? { label: "Field and timing recorded", status: "pass", detail: `${log.field} · ${log.startTime}` }
-      : { label: "Field and timing recorded", status: "fail", detail: "Missing field or start time" }
+      ? {
+          id: "fieldTiming",
+          status: "pass",
+          detail: "fieldTiming",
+          params: { field: log.field, time: log.startTime },
+        }
+      : { id: "fieldTiming", status: "fail", detail: "fieldTimingMissing" }
   );
 
   if (!log.product) {
-    checks.push({
-      label: "No product applied",
-      status: "info",
-      detail: "Nothing to verify against a label",
-    });
+    checks.push({ id: "noProduct", status: "info", detail: "noProduct" });
     return checks;
   }
 
@@ -44,45 +50,54 @@ export function complianceChecks(log: ComplianceInput): ComplianceCheck[] {
 
   checks.push(
     approved
-      ? { label: "Product on approved list", status: "pass", detail: `${approved.name} · ${approved.kind}` }
-      : { label: "Product on approved list", status: "fail", detail: `"${log.product}" is not on the farm's list` }
+      ? {
+          id: "productApproved",
+          status: "pass",
+          detail: "productApproved",
+          params: { product: approved.name, kind: approved.kind },
+        }
+      : {
+          id: "productApproved",
+          status: "fail",
+          detail: "productNotApproved",
+          params: { product: log.product },
+        }
   );
 
   if (!log.target) {
-    checks.push({
-      label: "Target on product label",
-      status: "info",
-      detail: "No target recorded for this application",
-    });
+    checks.push({ id: "targetOnLabel", status: "info", detail: "targetMissing" });
   } else if (!approved) {
-    checks.push({
-      label: "Target on product label",
-      status: "info",
-      detail: "Can't check a label for an unapproved product",
-    });
+    checks.push({ id: "targetOnLabel", status: "info", detail: "targetUnapproved" });
   } else {
     checks.push(
       approved.targets.includes(log.target)
-        ? { label: "Target on product label", status: "pass", detail: log.target }
+        ? {
+            id: "targetOnLabel",
+            status: "pass",
+            detail: "targetOnLabel",
+            params: { target: log.target },
+          }
         : {
-            label: "Target on product label",
+            id: "targetOnLabel",
             status: "fail",
-            detail: `${log.target} is not a labeled target for ${approved.name}`,
+            detail: "targetNotOnLabel",
+            params: { target: log.target, product: approved.name },
           }
     );
   }
 
   checks.push(
     log.rate
-      ? { label: "Application rate recorded", status: "pass", detail: log.rate }
-      : { label: "Application rate recorded", status: "fail", detail: "No rate captured" }
+      ? { id: "rateRecorded", status: "pass", detail: "rate", params: { rate: log.rate } }
+      : { id: "rateRecorded", status: "fail", detail: "rateMissing" }
   );
 
   if (approved) {
     checks.push({
-      label: "Re-entry interval logged",
+      id: "reiLogged",
       status: "pass",
-      detail: `${approved.reiHours}h after application`,
+      detail: "rei",
+      params: { hours: String(approved.reiHours) },
     });
   }
 

@@ -98,9 +98,8 @@ export function useVoiceRecorder() {
 
       setPhase("recording");
     } catch {
-      setError(
-        "Couldn't access your microphone. Check your browser's site permissions and try again."
-      );
+      // A dictionary key (see src/i18n/en.ts errors), not a sentence.
+      setError("micUnavailable");
     }
   }
 

@@ -9,31 +9,31 @@ import * as z from "zod";
 export const SignupSchema = z.discriminatedUnion("role", [
   z.object({
     role: z.literal("manager"),
-    name: z.string().trim().min(2, "Name must be at least 2 characters."),
-    email: z.email("Enter a valid email."),
-    password: z.string().min(8, "Password must be at least 8 characters."),
+    name: z.string().trim().min(2, "nameTooShort"),
+    email: z.email("invalidEmail"),
+    password: z.string().min(8, "passwordTooShort"),
   }),
   z.object({
     role: z.literal("worker"),
-    name: z.string().trim().min(2, "Name must be at least 2 characters."),
-    email: z.email("Enter a valid email."),
-    password: z.string().min(8, "Password must be at least 8 characters."),
-    joinCode: z.string().trim().min(1, "Enter your farm's join code."),
+    name: z.string().trim().min(2, "nameTooShort"),
+    email: z.email("invalidEmail"),
+    password: z.string().min(8, "passwordTooShort"),
+    joinCode: z.string().trim().min(1, "joinCodeRequired"),
   }),
 ]);
 
 export const LoginSchema = z.object({
-  email: z.email("Enter a valid email."),
-  password: z.string().min(1, "Password is required."),
+  email: z.email("invalidEmail"),
+  password: z.string().min(1, "passwordRequired"),
 });
 
 export const ChangePasswordSchema = z
   .object({
-    currentPassword: z.string().min(1, "Enter your current password."),
-    newPassword: z.string().min(8, "New password must be at least 8 characters."),
+    currentPassword: z.string().min(1, "currentPasswordRequired"),
+    newPassword: z.string().min(8, "newPasswordTooShort"),
     confirmPassword: z.string(),
   })
   .refine((data) => data.newPassword === data.confirmPassword, {
-    error: "New passwords don't match.",
+    error: "passwordsDontMatch",
     path: ["confirmPassword"],
   });

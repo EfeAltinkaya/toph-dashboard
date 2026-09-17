@@ -7,27 +7,31 @@ import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
 import { extractActivity, extractField, extractLogFields } from "@/lib/extract";
 import { complianceChecks } from "@/lib/compliance";
 import { formatTime } from "@/lib/date-utils";
+import { useI18n } from "@/i18n/I18nProvider";
+import { describeCheck, errorText, tr } from "@/i18n";
 
-const LANGS = [
+const SPEECH_LANGS = [
   { code: "en-US", label: "EN" },
   { code: "es-ES", label: "ES" },
 ] as const;
-type LangCode = (typeof LANGS)[number]["code"];
+type SpeechLang = (typeof SPEECH_LANGS)[number]["code"];
 
 // The second English example is deliberately non-compliant (Regalia isn't
 // labeled for aphids), so the demo can show a record being flagged rather
-// than only ever showing a clean pass.
-const EXAMPLES: Record<LangCode, string[]> = {
+// than only ever showing a clean pass. Examples are what someone would say
+// out loud, so they're tied to the speech language, not the page language.
+const EXAMPLES: Record<SpeechLang, string[]> = {
   "en-US": [
     "Sprayed M-Pede on field A for aphids, two gallons per acre.",
     "Sprayed Regalia on field C for aphids, one quart per acre.",
   ],
   "es-ES": [
     "Rociamos Serenade ASO en el campo B contra oidio, veinticuatro onzas por acre.",
+    "Rociamos Regalia en el campo C contra pulgones, un litro por acre.",
   ],
 };
 
-const STAGES = ["Listen", "Transcribe", "Extract", "Verify", "Audit-ready"];
+const STAGES = ["listen", "transcribe", "extract", "verify", "auditReady"] as const;
 
 function Cell({ label, value }: { label: string; value: string | null }) {
   return (
@@ -61,12 +65,18 @@ function Cell({ label, value }: { label: string; value: string | null }) {
  * scripted animation to fall out of sync with what the product does.
  */
 export function HeroVoiceDemo() {
+  const { lang: pageLang, t } = useI18n();
   const recorder = useVoiceRecorder();
-  const [lang, setLang] = useState<LangCode>("en-US");
+  // Someone reading the page in Spanish most likely wants to speak Spanish.
+  const [lang, setLang] = useState<SpeechLang>(pageLang === "es" ? "es-ES" : "en-US");
   const [draft, setDraft] = useState("");
   // Set at interaction time, never during render, so the server-rendered
   // HTML and the first client render can't disagree about the clock.
   const [time, setTime] = useState<string | null>(null);
+  // Speech support is only knowable in the browser, so the first render
+  // always shows the mic button (matching the server HTML) and the
+  // "unsupported" note only appears once someone actually tries it.
+  const [unsupported, setUnsupported] = useState(false);
 
   const text = recorder.transcript;
   const hasText = text.trim().length > 0;
@@ -97,11 +107,6 @@ export function HeroVoiceDemo() {
     setTime(formatTime(new Date()));
   }
 
-  // Speech support is only knowable in the browser, so the first render
-  // always shows the mic button (matching the server HTML) and the
-  // "unsupported" note only appears once someone actually tries it.
-  const [unsupported, setUnsupported] = useState(false);
-
   function start() {
     if (!recorder.speechSupported) {
       setUnsupported(true);
@@ -123,15 +128,17 @@ export function HeroVoiceDemo() {
         <div className="flex items-center gap-2">
           <span className={`h-2 w-2 rounded-full bg-clay ${listening ? "animate-pulse" : "opacity-40"}`} />
           <span className="font-eyebrow text-[11px] tracking-widest text-wheat/60 uppercase">
-            {listening ? "Listening" : "Live demo · try it"}
+            {listening ? t.demo.listening : t.demo.badge}
           </span>
         </div>
         <div className="flex rounded-full border border-wheat/15 p-0.5">
-          {LANGS.map((l) => (
+          {SPEECH_LANGS.map((l) => (
             <button
               key={l.code}
               type="button"
               disabled={listening}
+              aria-label={t.vocab.languages[l.code]}
+              aria-pressed={lang === l.code}
               onClick={() => {
                 setLang(l.code);
                 reset();
@@ -151,18 +158,18 @@ export function HeroVoiceDemo() {
           const lit = i <= stage;
           const warn = flagged && i === 3;
           return (
-            <div key={s} className="flex flex-1 flex-col gap-1">
+            <div key={s} className="flex min-w-0 flex-1 flex-col gap-1">
               <div
                 className={`h-1 rounded-full transition-colors duration-500 ${
                   warn ? "bg-clay" : lit ? "bg-crop" : "bg-wheat/10"
                 }`}
               />
               <span
-                className={`font-eyebrow text-[8px] tracking-widest uppercase transition-colors ${
+                className={`truncate font-eyebrow text-[8px] tracking-widest uppercase transition-colors ${
                   lit ? "text-wheat/70" : "text-wheat/25"
                 }`}
               >
-                {s}
+                {t.stages[s]}
               </span>
             </div>
           );
@@ -186,14 +193,14 @@ export function HeroVoiceDemo() {
               ))}
             </div>
             <p className="mt-2 font-display text-lg text-wheat">
-              {text || <span className="text-wheat/40">Say what you did in the field…</span>}
+              {text || <span className="text-wheat/40">{t.demo.sayPrompt}</span>}
             </p>
             <button
               type="button"
               onClick={recorder.stop}
               className="mt-3 flex items-center gap-1.5 rounded-full bg-clay px-4 py-2 text-xs font-medium text-white hover:opacity-90"
             >
-              <Square size={12} /> Stop
+              <Square size={12} /> {t.demo.stop}
             </button>
           </div>
         ) : hasText ? (
@@ -204,7 +211,7 @@ export function HeroVoiceDemo() {
               onClick={reset}
               className="mt-2 flex items-center gap-1 text-xs text-wheat/50 hover:text-wheat"
             >
-              <RotateCcw size={11} /> Try another
+              <RotateCcw size={11} /> {t.demo.tryAnother}
             </button>
           </div>
         ) : (
@@ -214,13 +221,9 @@ export function HeroVoiceDemo() {
               onClick={start}
               className="flex w-full items-center justify-center gap-2 rounded-full bg-wheat py-3 text-sm font-medium text-soil shadow-lg transition-transform hover:scale-[1.02]"
             >
-              <Mic size={16} /> Tap and say what you did
+              <Mic size={16} /> {t.demo.tapToTalk}
             </button>
-            {unsupported && (
-              <p className="mt-2 text-xs text-wheat/60">
-                Voice needs Chrome or Edge. Pick an example or type a sentence below.
-              </p>
-            )}
+            {unsupported && <p className="mt-2 text-xs text-wheat/60">{t.demo.unsupported}</p>}
             <div className="mt-3 flex flex-wrap gap-1.5">
               {EXAMPLES[lang].map((example) => (
                 <button
@@ -243,25 +246,27 @@ export function HeroVoiceDemo() {
               <input
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
-                placeholder="…or type one"
+                placeholder={t.demo.typePlaceholder}
                 className="w-full bg-transparent py-1.5 text-sm text-wheat placeholder:text-wheat/30 focus:outline-none"
               />
-              <button type="submit" aria-label="Run" className="text-wheat/40 hover:text-wheat">
+              <button type="submit" aria-label={t.demo.run} className="text-wheat/40 hover:text-wheat">
                 <CornerDownLeft size={14} />
               </button>
             </form>
           </div>
         )}
-        {recorder.error && <p className="mt-2 text-xs text-clay">{recorder.error}</p>}
+        {recorder.error && (
+          <p className="mt-2 text-xs text-clay">{errorText(t, recorder.error)}</p>
+        )}
       </div>
 
       <div className="mt-4 grid grid-cols-3 gap-1.5">
-        <Cell label="Activity" value={activity} />
-        <Cell label="Field" value={field} />
-        <Cell label="Time" value={hasText ? time : null} />
-        <Cell label="Product" value={product} />
-        <Cell label="Target" value={target} />
-        <Cell label="Rate" value={rate} />
+        <Cell label={t.fields.activity} value={activity && tr(t.vocab.activities, activity)} />
+        <Cell label={t.fields.field} value={field && tr(t.vocab.fields, field)} />
+        <Cell label={t.fields.time} value={hasText ? time : null} />
+        <Cell label={t.fields.product} value={product} />
+        <Cell label={t.fields.target} value={target && tr(t.vocab.targets, target)} />
+        <Cell label={t.fields.rate} value={rate} />
       </div>
 
       <AnimatePresence>
@@ -273,46 +278,43 @@ export function HeroVoiceDemo() {
             className="overflow-hidden"
           >
             <ul className="mt-4 space-y-1">
-              {checks.map((check, i) => (
-                <motion.li
-                  key={check.label}
-                  initial={{ opacity: 0, x: -6 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.1 + i * 0.12 }}
-                  className="flex items-start gap-2 text-xs"
-                >
-                  <span
-                    className={`mt-px flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full text-[9px] font-bold text-white ${
-                      check.status === "pass" ? "bg-crop" : check.status === "fail" ? "bg-clay" : "bg-wheat/25"
-                    }`}
+              {checks.map((check, i) => {
+                const { label, detail } = describeCheck(check, t);
+                return (
+                  <motion.li
+                    key={check.id}
+                    initial={{ opacity: 0, x: -6 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.1 + i * 0.12 }}
+                    className="flex items-start gap-2 text-xs"
                   >
-                    {check.status === "pass" ? "✓" : check.status === "fail" ? "!" : "–"}
-                  </span>
-                  <span className="text-wheat/70">
-                    {check.label}
-                    {check.detail && <span className="text-wheat/35"> · {check.detail}</span>}
-                  </span>
-                </motion.li>
-              ))}
+                    <span
+                      className={`mt-px flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full text-[9px] font-bold text-white ${
+                        check.status === "pass" ? "bg-crop" : check.status === "fail" ? "bg-clay" : "bg-wheat/25"
+                      }`}
+                    >
+                      {check.status === "pass" ? "✓" : check.status === "fail" ? "!" : "–"}
+                    </span>
+                    <span className="text-wheat/70">
+                      {label}
+                      {detail && <span className="text-wheat/35"> · {detail}</span>}
+                    </span>
+                  </motion.li>
+                );
+              })}
             </ul>
             <div
               className={`mt-3 rounded-lg px-3 py-2 text-xs font-medium ${
                 flagged ? "bg-clay/20 text-clay" : found === 0 ? "bg-wheat/5 text-wheat/50" : "bg-crop/20 text-wheat"
               }`}
             >
-              {flagged
-                ? "Flagged for review before this goes in the audit file."
-                : found === 0
-                  ? "Nothing recognizable yet — try naming a product, a field, and a rate."
-                  : "Audit-ready. This is what goes on file."}
+              {flagged ? t.demo.flagged : found === 0 ? t.demo.nothingFound : t.demo.ready}
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      <p className="mt-4 text-[10px] text-wheat/30">
-        Nothing from this demo is saved. Speech recognition is handled by your browser.
-      </p>
+      <p className="mt-4 text-[10px] text-wheat/30">{t.demo.privacy}</p>
     </div>
   );
 }

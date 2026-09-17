@@ -2,16 +2,17 @@
 
 import { useEffect, useState } from "react";
 import { Check } from "lucide-react";
+import { useI18n } from "@/i18n/I18nProvider";
 
 const THEMES = [
-  { id: "default", label: "Default", swatch: "#ffffff", dark: false },
-  { id: "dark", label: "Dark", swatch: "#171717", dark: true },
-  { id: "slate", label: "Slate", swatch: "#4c6b8a", dark: true },
-  { id: "sage", label: "Sage", swatch: "#6b8f71", dark: true },
-  { id: "terracotta", label: "Terracotta", swatch: "#b0654a", dark: true },
-  { id: "plum", label: "Plum", swatch: "#7d6088", dark: true },
-  { id: "ochre", label: "Ochre", swatch: "#b8935a", dark: true },
-];
+  { id: "default", swatch: "#ffffff", dark: false },
+  { id: "dark", swatch: "#171717", dark: true },
+  { id: "slate", swatch: "#4c6b8a", dark: true },
+  { id: "sage", swatch: "#6b8f71", dark: true },
+  { id: "terracotta", swatch: "#b0654a", dark: true },
+  { id: "plum", swatch: "#7d6088", dark: true },
+  { id: "ochre", swatch: "#b8935a", dark: true },
+] as const;
 
 function applyTheme(id: string) {
   if (id === "default") {
@@ -32,6 +33,7 @@ export function ThemeSwitcher() {
   // and would otherwise have to guess). The real saved value is applied
   // right after mount instead, which avoids a hydration mismatch at the
   // cost of a single, effectively invisible frame.
+  const { t } = useI18n();
   const [active, setActive] = useState("default");
 
   useEffect(() => {
@@ -57,7 +59,7 @@ export function ThemeSwitcher() {
             applyTheme(theme.id);
             setActive(theme.id);
           }}
-          title={theme.label}
+          title={t.themes[theme.id]}
           className="flex h-8 w-8 items-center justify-center rounded-full border border-neutral-300"
           style={{ backgroundColor: theme.swatch }}
         >

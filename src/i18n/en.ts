@@ -1,0 +1,698 @@
+// Every user-facing string in the app. Spanish (es.ts) is typed against
+// this object's shape, so a missing or misspelled key there is a compile
+// error rather than a blank spot in the UI.
+//
+// Keyed objects rather than arrays wherever there's a list (features,
+// FAQs, product steps): TypeScript can check that Spanish has every key,
+// but it can't check that two arrays are the same length.
+//
+// Placeholders like {count} are filled by `format()` in ./index.ts. The
+// dictionary has to be plain strings (no functions) because the language
+// provider hands it across the server/client boundary.
+export const en = {
+  langToggle: {
+    label: "Language",
+  },
+
+  nav: {
+    product: "Product",
+    useCases: "Use Cases",
+    company: "Company",
+    logIn: "Log In",
+    requestBriefing: "Request a Briefing",
+    dashboard: "Dashboard",
+    getStarted: "Get Started",
+  },
+
+  footer: {
+    disclaimer:
+      "Toph is a fictional product built for the LavaLab Fall 2026 developer challenge. Photography from Unsplash; no one pictured is a Toph user.",
+  },
+
+  photos: {
+    fieldRowsAerial: "Aerial view of cultivated farmland planted in long straight rows",
+    workersInField: "Two farmworkers bent over a green field in the early-morning haze",
+    workerCarryingFlat:
+      "A farmworker carrying a flat of produce past stacked pallets in a foggy field",
+    tractorPlanting: "Aerial view of a tractor pulling a planter across dry, dusty farmland",
+    coveredRows: "Aerial view of crop rows under protective white covers across several fields",
+    paddyPlowing: "A farmer walking oxen beside a tractor in a flooded field, palm trees behind",
+    tendingCrops: "A farmer tending crops by hand with palm trees on the hillside behind",
+  },
+
+  home: {
+    hero: {
+      eyebrow: "Audit-ready, from the moment it happens",
+      titleStart: "Turn a season of fieldwork into a",
+      titleEmphasis: "record that survives an audit",
+      body: "Toph captures what happens in the field at the source and turns it into a continuously updated system of record, so a compliance report is something you already have, not something you build the night before an inspection.",
+      goToDashboard: "Go to Dashboard",
+      getStarted: "Get Started",
+      haveAccount: "I already have an account",
+    },
+    problem: {
+      chipLabel: "Voice log captured",
+      chipValue: "Field B · Harvest · 6:42 AM",
+      quote:
+        "Agriculture is one of the most heavily regulated industries in the United States, yet most farms still rely on fragmented, manual systems using paper logs.",
+      body: "With audits landing 5–10 times a year, often with little notice, that means hundreds of hours spent reconstructing months of records by hand, pulled straight out of the field.",
+    },
+    how: {
+      eyebrow: "How Toph works",
+      title: "From what happened in the field to what an auditor can sign off on.",
+      capture: {
+        title: "Capture at the source",
+        body: "A worker reports what they did while they're still in the field, so the record starts as close to the work as possible, not as a memory from later.",
+      },
+      structure: {
+        title: "Structure and enrich",
+        body: "Toph processes that report against workflow context and farm data, turning it into a structured log with audit regulations already in mind.",
+      },
+      ready: {
+        title: "Audit-ready, always",
+        body: "The result is a continuously updated system of record. When an inspection comes up, nothing has to be reconstructed by hand.",
+      },
+    },
+    features: {
+      eyebrow: "What's built in",
+      title: "Everything it takes to make the record hold up.",
+      tagging: {
+        title: "Audit-ready tagging",
+        body: "Flag anything that needs a second look, and it surfaces automatically in Audit Manager, already dated and attributed.",
+      },
+      locations: {
+        title: "Real field locations",
+        body: "Every log is pinned to an actual field on a live satellite map, so the record says exactly where the work happened.",
+      },
+      photos: {
+        title: "Photo evidence",
+        body: "Attach a photo straight from the log, so a compliance record isn't just a transcript, it's proof.",
+      },
+      handsFree: {
+        title: "Hands-free reporting",
+        body: "Workers report what they did by talking, from the field, on their phone, the moment it happens instead of days later on a form.",
+      },
+      languages: {
+        title: "Understands every worker",
+        body: "A log recorded in Spanish is captured just as accurately as one in English, so language is never why a record goes missing.",
+      },
+      board: {
+        title: "One team board",
+        body: "Post an update the whole crew sees, so coordination doesn't depend on a group text no one reads.",
+      },
+    },
+    stats: {
+      eyebrow: "Right now, in this demo",
+      title: "A system of record, not a mockup.",
+      body: "These numbers are pulled live from the same database the dashboard, and any compliance report, reads from.",
+      logs: "Logged activities",
+      workers: "Workers tracked",
+      fields: "Fields monitored",
+    },
+    testimonial: {
+      quote:
+        "Our last audit used to take a week to prepare for. Now the record is just already there, waiting for someone to ask.",
+      attribution: "Bays Ranch · Admin",
+    },
+    faq: {
+      title: "Frequently asked questions",
+      replace: {
+        q: "Does Toph replace our existing systems?",
+        a: "No. Toph sits alongside whatever you already use for scheduling, payroll, or field management, it's the layer that turns what happens in the field into a structured, audit-ready record.",
+      },
+      auditReady: {
+        q: "What actually makes a log 'audit-ready'?",
+        a: "Every log is enriched with the field, the time, and workflow context, then checked against the regulations that apply, so it can be handed to an inspector as-is instead of cleaned up first.",
+      },
+      languages: {
+        q: "What languages does Toph support?",
+        a: "Voice logs can be recorded in English or Spanish, so language is never the reason a report doesn't get filed. The whole app can also be switched to Spanish, and anything recorded in Spanish can be translated to English with one click.",
+      },
+      data: {
+        q: "Who can see the data?",
+        a: "Managers on your farm have full access to logs, the map, and reports. Field workers join with a farm code and only see and create their own logs.",
+      },
+      trial: {
+        q: "Can I try it before committing to anything?",
+        a: "Yes, create a free account and you'll have the full dashboard, recording, and reporting tools immediately.",
+      },
+    },
+    finalCta: {
+      title: "Stop reconstructing the season from memory.",
+      body: "Set up takes a couple of minutes. Your first field report can be captured before you put your phone down.",
+    },
+  },
+
+  demo: {
+    listening: "Listening",
+    badge: "Live demo · try it",
+    sayPrompt: "Say what you did in the field…",
+    stop: "Stop",
+    tryAnother: "Try another",
+    tapToTalk: "Tap and say what you did",
+    unsupported: "Voice needs Chrome or Edge. Pick an example or type a sentence below.",
+    typePlaceholder: "…or type one",
+    run: "Run",
+    flagged: "Flagged for review before this goes in the audit file.",
+    nothingFound: "Nothing recognizable yet — try naming a product, a field, and a rate.",
+    ready: "Audit-ready. This is what goes on file.",
+    privacy: "Nothing from this demo is saved. Speech recognition is handled by your browser.",
+  },
+
+  stages: {
+    listen: "Listen",
+    transcribe: "Transcribe",
+    extract: "Extract",
+    verify: "Verify",
+    auditReady: "Audit-ready",
+  },
+
+  fields: {
+    activity: "Activity",
+    field: "Field",
+    fieldBlock: "Field / block",
+    time: "Time",
+    timing: "Timing",
+    product: "Product",
+    productRecord: "Product / record",
+    target: "Target",
+    rate: "Rate",
+    notes: "Notes",
+    employee: "Employee",
+    date: "Date",
+    name: "Name",
+    email: "Email",
+    password: "Password",
+    photo: "Photo",
+  },
+
+  fieldScan: {
+    eyebrow: "Every field, on the record",
+    title: "The ground, turned into data you can audit.",
+    body: "Every log is pinned to real coordinates and checked against what was applied, so the record says exactly which block was treated, with what, and when.",
+    mapped: "Mapped",
+    mappedValue: "{count} fields · Firebaugh, CA",
+    cta: "See how it works",
+    plotA: "Spraying · 24 oz/acre",
+    plotB: "Harvest · 6:42 AM",
+    plotC: "Scouting · no product",
+  },
+
+  product: {
+    eyebrow: "Product",
+    title: "One system, from what happens in the field to the document an auditor signs off on.",
+    body: "Every piece below is live in the dashboard today, not a roadmap item.",
+    recording: {
+      eyebrow: "01 / Recording",
+      title: "A conversation, not a form.",
+      body: "A worker taps record and talks the way they already describe their day. Toph listens continuously and captures the activity, the field, and the time without a single dropdown.",
+    },
+    understanding: {
+      eyebrow: "02 / Understanding",
+      title: "It doesn't need English to understand you.",
+      body: "Recognition runs in the worker's own language. A Spanish-speaking crew member is heard as accurately as an English-speaking one, and the record can be translated for whoever reviews it later.",
+    },
+    location: {
+      eyebrow: "03 / Location",
+      title: "Every log knows where it happened.",
+      body: "Logs are pinned to real field coordinates on a live satellite map, so 'field A' means an actual polygon on the ground, not a label someone has to remember.",
+    },
+    evidence: {
+      eyebrow: "04 / Evidence",
+      title: "A photo turns a claim into proof.",
+      body: "Attach a picture straight from the recording flow. When an inspector asks what a treated block looked like that morning, you have an answer instead of a guess.",
+    },
+    review: {
+      eyebrow: "05 / Review",
+      title: "Flag it once, find it forever.",
+      body: "Tag anything that needs a second look and it surfaces automatically under Audit Manager, already filtered, already dated, already attributed.",
+    },
+    coordination: {
+      eyebrow: "06 / Coordination",
+      title: "One board the whole crew actually reads.",
+      body: "Post an update once and everyone with an account sees it, replacing the group chat that half the team has muted.",
+    },
+  },
+
+  useCases: {
+    eyebrow: "Use cases",
+    title: "Built for how a real operation actually runs.",
+    crews: {
+      tag: "Multi-language crews",
+      title: "A crew that speaks three languages between them.",
+      body: "Nobody has to switch to English to be understood. Every worker records in whatever language they think in, and the office reads it in whichever language they need.",
+    },
+    spray: {
+      tag: "Spray & chemical compliance",
+      title: "Prove exactly what went on which field, and when.",
+      body: "A spray log captured the moment it happened, with a field pin and a timestamp, holds up a lot better under audit than a memory from three weeks ago.",
+    },
+    multiField: {
+      tag: "Multi-field operations",
+      title: "Four fields or forty, the record looks the same.",
+      body: "Every field gets its own coordinates on the map. Scaling up doesn't mean inventing a new spreadsheet tab for every new block.",
+    },
+    audit: {
+      tag: "Audit season",
+      title: "Stop reconstructing the season from memory.",
+      body: "When the inspector calls, the season's activity is already organized by employee, field, and date, not waiting to be assembled the night before.",
+    },
+  },
+
+  company: {
+    eyebrow: "Company",
+    title: "Contextualizing farm compliance, one conversation at a time.",
+    body: "Agriculture is one of the most heavily regulated industries in the United States, yet most farms still rely on fragmented, manual systems using paper logs. We think the fix starts with how the record gets made, not with another form.",
+    photoCaption: "The record starts here, not in the office.",
+    field: {
+      title: "The field comes first.",
+      body: "Every decision starts with whether it makes a worker's day easier, not whether it makes a report look more impressive.",
+    },
+    language: {
+      title: "Language shouldn't be a barrier to being believed.",
+      body: "A log recorded in Spanish is exactly as valid as one recorded in English. Translation exists so the office understands, not so the worker has to accommodate.",
+    },
+    byproduct: {
+      title: "Compliance should be a byproduct, not a chore.",
+      body: "If keeping a record takes more effort than doing the work itself, most people won't keep it. Toph exists to close that gap.",
+    },
+    note: "This build of Toph was made as a developer take-home for LavaLab, USC's engineering entrepreneurship club, inspired by the real Toph, a Spring 2026 LavaLab startup solving exactly this problem.",
+  },
+
+  briefing: {
+    successTitle: "Request received.",
+    successBody:
+      "We'll follow up at the email you gave us. In the meantime, feel free to explore the dashboard yourself.",
+    close: "Close",
+    eyebrow: "Secure intake",
+    title: "Request a briefing.",
+    body: "Tell us where the paperwork is piling up. Required fields are marked with an asterisk.",
+    firstName: "First name *",
+    lastName: "Last name *",
+    email: "Work email *",
+    company: "Farm / company *",
+    responsibility: "Primary responsibility *",
+    selectResponsibility: "Select a responsibility",
+    context: "What do you want to improve? *",
+    contextPlaceholder: "Describe the workflow or compliance headache you're trying to fix.",
+    sending: "Sending...",
+    submit: "Request a Briefing",
+    responsibilities: {
+      "Farm Owner / Operator": "Farm Owner / Operator",
+      "Compliance / Regulatory": "Compliance / Regulatory",
+      "Field Operations Manager": "Field Operations Manager",
+      Other: "Other",
+    },
+  },
+
+  auth: {
+    login: {
+      title: "Log in to Toph",
+      subtitle: "Farm activity dashboard for Bays Ranch.",
+      submitting: "Logging in...",
+      submit: "Log In",
+      noAccount: "No account?",
+      signUp: "Sign up",
+    },
+    signup: {
+      title: "Create your account",
+      managerSubtitle: "Full access to the dashboard, reports, and team.",
+      workerSubtitle: "Log field activity and join your team's farm.",
+      manager: "Manager",
+      worker: "Field Worker",
+      passwordHint: "At least 8 characters.",
+      joinCode: "Farm join code",
+      joinCodePlaceholder: "e.g. BAYRANCH",
+      joinCodeHint: "Get this from the manager who runs your farm's account.",
+      submitting: "Creating account...",
+      submit: "Sign Up",
+      haveAccount: "Already have an account?",
+      logIn: "Log in",
+    },
+  },
+
+  // Server actions return these keys instead of sentences, so an action
+  // never has to know which language the person on the other end reads.
+  errors: {
+    nameTooShort: "Name must be at least 2 characters.",
+    invalidEmail: "Enter a valid email.",
+    passwordTooShort: "Password must be at least 8 characters.",
+    joinCodeRequired: "Enter your farm's join code.",
+    passwordRequired: "Password is required.",
+    currentPasswordRequired: "Enter your current password.",
+    newPasswordTooShort: "New password must be at least 8 characters.",
+    passwordsDontMatch: "New passwords don't match.",
+    emailTaken: "An account with that email already exists.",
+    joinCodeInvalid: "That join code doesn't match a farm. Check with your manager.",
+    rateLimited: "Too many failed attempts. Try again in 15 minutes.",
+    invalidCredentials: "Invalid email or password.",
+    notAuthenticated: "Not authenticated.",
+    currentPasswordWrong: "Current password is incorrect.",
+    nameAndEmailRequired: "Name and email are required.",
+    emailInUse: "That email is already in use.",
+    firstNameRequired: "Enter your first name.",
+    lastNameRequired: "Enter your last name.",
+    workEmailInvalid: "Enter a valid work email.",
+    companyRequired: "Enter your company or farm name.",
+    responsibilityRequired: "Select a responsibility.",
+    contextRequired: "Tell us a bit about what you need.",
+    logNotFound: "Log not found.",
+    translationEmpty: "Translation service returned no result.",
+    translationUnavailable: "Couldn't reach the translation service. Try again in a moment.",
+    employeeHasLogs: "Can't delete: this employee has {count} logged activities. Delete or reassign their logs first.",
+    employeeHasOneLog: "Can't delete: this employee has 1 logged activity. Delete or reassign it first.",
+    micUnavailable: "Couldn't access your microphone. Check your browser's site permissions and try again.",
+    locationDenied: "Location permission was denied. Check your browser's site settings to allow it.",
+    locationUnsupported: "Your browser doesn't support geolocation.",
+  },
+
+  sidebar: {
+    overview: "Overview",
+    compliance: "Compliance",
+    team: "Team Management",
+    other: "Other",
+    dashboard: "Dashboard",
+    activityLogs: "Activity Logs",
+    map: "Map",
+    auditManager: "Audit Manager",
+    reports: "Reports",
+    schedule: "Schedule",
+    employees: "Employees",
+    performance: "Performance",
+    messages: "Messages",
+    settings: "Settings",
+    support: "Support",
+    role: "Admin",
+    productSite: "Product site",
+    logOut: "Log Out",
+  },
+
+  dashboard: {
+    title: "Dashboard",
+    subtitle: "An overview of your farm and employee activity",
+    todaysRecordings: "Todays Recordings",
+    activeWorkers: "Active Workers",
+    responseAccuracy: "Response Accuracy",
+    newCount: "{count} New",
+    live: "Live",
+  },
+
+  logs: {
+    search: "Search",
+    newLog: "New Log",
+    defaultTitle: "New Employee Logs",
+    sort: "Sort",
+    filter: "Filter",
+    allTime: "All Time",
+    thisWeek: "This Week",
+    thisMonth: "This Month",
+    allActivities: "All Activities",
+    empty: "No logs match your filters.",
+    employeeName: "Employee name",
+    save: "Save",
+    cancel: "Cancel",
+    edit: "Edit",
+    delete: "Delete",
+    view: "View",
+    close: "Close",
+    confirmDelete: "Delete this log for {name}? This can't be undone.",
+    recordedInSpanish: "Recorded in Spanish",
+    typedEntry: "Typed entry — no recording attached.",
+    summary: "Summary",
+    spanishSuffix: "(Spanish)",
+    translating: "Translating...",
+    showOriginal: "Show Original",
+    showEnglish: "Show English",
+    translateToEnglish: "Translate to English",
+    replacePhoto: "Replace Photo",
+    addPhoto: "Add Photo",
+    expandMap: "Expand Map",
+    playRecording: "Play Recording",
+    pauseRecording: "Pause Recording",
+    addTag: "Add Tag",
+    tags: "Tags",
+  },
+
+  recordModal: {
+    title: "Record a New Log",
+    employeePlaceholder: "Type a name (new or existing)",
+    spokenLanguage: "Spoken Language",
+    languageHint:
+      "Sets what the recognizer listens for. Logs in Spanish can be translated to English afterward.",
+    startRecording: "Start Recording",
+    recording: "Recording...",
+    listening: "Listening...",
+    stopRecording: "Stop Recording",
+    transcript: "Transcript",
+    transcriptUnsupported: "(live transcription needs Chrome or Edge — type it manually)",
+    transcriptPlaceholder: "What happened in this log?",
+    photoOptional: "Photo (optional)",
+    retake: "Retake",
+    addPhoto: "Add Photo",
+    saving: "Saving...",
+    saveLog: "Save Log",
+  },
+
+  extracted: {
+    enteredLog: "Entered log",
+    extractedLog: "Extracted log",
+    correctFields: "Correct fields",
+    save: "Save",
+    cancel: "Cancel",
+    notCaptured: "not captured",
+    complianceChecks: "Compliance checks",
+    typedNote: "Entered by the worker. Checks run against the farm's approved product list.",
+    voiceNote:
+      "Parsed from the transcript against the farm's approved product list, then checked. Correct anything it got wrong.",
+  },
+
+  compliance: {
+    labels: {
+      fieldTiming: "Field and timing recorded",
+      noProduct: "No product applied",
+      productApproved: "Product on approved list",
+      targetOnLabel: "Target on product label",
+      rateRecorded: "Application rate recorded",
+      reiLogged: "Re-entry interval logged",
+    },
+    details: {
+      fieldTiming: "{field} · {time}",
+      fieldTimingMissing: "Missing field or start time",
+      noProduct: "Nothing to verify against a label",
+      productApproved: "{product} · {kind}",
+      productNotApproved: "\"{product}\" is not on the farm's list",
+      targetMissing: "No target recorded for this application",
+      targetUnapproved: "Can't check a label for an unapproved product",
+      targetOnLabel: "{target}",
+      targetNotOnLabel: "{target} is not a labeled target for {product}",
+      rate: "{rate}",
+      rateMissing: "No rate captured",
+      rei: "{hours}h after application",
+    },
+  },
+
+  worker: {
+    voice: "Voice",
+    type: "Type",
+    logs: "Logs",
+    productSite: "Product site",
+    logOut: "Log out",
+    today: "Today ({count})",
+    allHistory: "All history ({count})",
+    emptyToday: "Nothing logged today yet. Switch to Voice and say what you're working on.",
+    emptyAll: "No logs yet.",
+    hide: "Hide",
+    whatWasRecorded: "What was recorded",
+    language: "Language / idioma",
+    startLogging: "Start logging",
+    speakHint: "Just say what you did. You can speak normally, in {language}.",
+    listening: "Listening…",
+    recording: "Recording…",
+    stop: "Stop",
+    whatYouSaid: "What you said",
+    cantTranscribe: " — type it in, this browser can't transcribe",
+    voicePlaceholder: "e.g. Sprayed Serenade ASO on Field A for aphids, 24 ounces per acre.",
+    retakePhoto: "Retake photo",
+    addPhoto: "Add photo",
+    recordAgain: "Record again",
+    sending: "Sending to the office…",
+    submit: "Submit log",
+    typeIntro: "No signal, or somewhere too loud to talk? Fill it in by hand instead.",
+    productUsed: "Product used",
+    productPlaceholder: "Leave blank if none",
+    targetPlaceholder: "e.g. aphids",
+    ratePlaceholder: "e.g. 24 oz/acre",
+    notesPlaceholder: "Anything else worth recording?",
+    typedActivity: "{activity} in {field}.",
+    typedApplied: "Applied {product}.",
+    typedAppliedAt: "Applied {product} at {rate}.",
+    typedTarget: "Target: {target}.",
+  },
+
+  settings: {
+    title: "Settings",
+    subtitle: "Manage your account.",
+    themeTitle: "Color Theme",
+    themeDescription:
+      "Re-tints the sidebar, cards, and buttons across the whole app, for this browser only.",
+    changePhoto: "Change Photo",
+    saved: "Saved.",
+    saving: "Saving...",
+    saveChanges: "Save Changes",
+    passwordTitle: "Change Password",
+    currentPassword: "Current Password",
+    newPassword: "New Password",
+    confirmPassword: "Confirm New Password",
+    passwordUpdated: "Password updated.",
+    updatePassword: "Update Password",
+    joinCodeTitle: "{farm} join code",
+    joinCodeDescription:
+      "Give this to a field worker signing up — they'll enter it to join your farm and start logging.",
+    copyJoinCode: "Copy join code",
+  },
+
+  themes: {
+    default: "Default",
+    dark: "Dark",
+    slate: "Slate",
+    sage: "Sage",
+    terracotta: "Terracotta",
+    plum: "Plum",
+    ochre: "Ochre",
+  },
+
+  pages: {
+    activityLogs: {
+      title: "Activity Logs",
+      subtitle: "Every logged activity across the farm.",
+      tableTitle: "All Logs",
+    },
+    auditManager: {
+      title: "Audit Manager",
+      subtitle: "Logs tagged “{needsReview}” or “{flagged}” for compliance follow-up.",
+      empty:
+        "Nothing flagged right now. Tag a log “{needsReview}” or “{flagged}” from the dashboard to see it here.",
+      tableTitle: "Flagged Logs",
+    },
+    employees: {
+      title: "Employees",
+      subtitle: "Everyone logging activity on the farm.",
+      tableTitle: "Employees ({count})",
+      add: "Add Employee",
+      fullName: "Full name",
+      logs: "Logs",
+      avgAccuracy: "Avg. Accuracy",
+      lastActive: "Last Active",
+      confirmDelete: "Delete {name}?",
+      delete: "Delete",
+    },
+    map: {
+      title: "Map",
+      subtitle: "Every field being tracked, with how much logged activity each has.",
+      locating: "Locating...",
+      locateMe: "Locate Me",
+      youAreHere: "You are here",
+      activityCount: "{count} logged activities",
+      activityCountOne: "1 logged activity",
+    },
+    messages: {
+      title: "Messages",
+      subtitle: "A shared board for the whole team, everyone with an account can post.",
+      board: "Team Board",
+      empty: "No messages yet. Say hello.",
+      placeholder: "Post an update to the whole team...",
+      send: "Send",
+    },
+    performance: {
+      title: "Performance",
+      subtitle: "Logged activity and average transcription confidence per employee.",
+      summary: "{count} logs · {accuracy} avg. accuracy",
+    },
+    reports: {
+      title: "Reports",
+      subtitle: "A summary of everything logged across the farm.",
+      totalLogs: "Total Logs",
+      totalEmployees: "Total Employees",
+      byActivity: "By Activity",
+      byField: "By Field",
+    },
+    schedule: {
+      title: "Schedule",
+      subtitle: "Activity grouped by day, most recent first.",
+      entry: "— {activity} at {field}",
+    },
+    support: {
+      title: "Support",
+      subtitle: "Common questions about Toph.",
+      logActivity: {
+        q: "How do I log a new activity?",
+        a: "Click \"New Log\" from the Dashboard or Activity Logs page, pick the employee, activity, and field, then record. Live transcription works in Chrome and Edge.",
+      },
+      transcription: {
+        q: "Why don't I see live transcription while recording?",
+        a: "Live speech-to-text uses the browser's built-in Web Speech API, which currently only ships in Chrome and Edge. You can still record audio and type the summary manually in any browser.",
+      },
+      flag: {
+        q: "How do I flag a log for review?",
+        a: "Open a log, click \"Add Tag,\" and choose \"Needs Review\" or \"Flagged.\" It'll then show up under Audit Manager.",
+      },
+      edit: {
+        q: "Can I edit a log after it's saved?",
+        a: "Yes. Click the pencil icon on any row in Activity Logs or the Dashboard to edit it in place.",
+      },
+    },
+  },
+
+  // Fixed vocabulary stored in the database in English. Displayed through
+  // these maps, never rewritten in storage, so switching language can't
+  // change what a record says or break a filter that matches on it.
+  vocab: {
+    activities: {
+      Spraying: "Spraying",
+      Harvesting: "Harvesting",
+      Planting: "Planting",
+      Irrigation: "Irrigation",
+      Scouting: "Scouting",
+      Pruning: "Pruning",
+      "Soil work": "Soil work",
+      "Equipment maintenance": "Equipment maintenance",
+    },
+    fields: {
+      "Field A": "Field A",
+      "Field B": "Field B",
+      "Field C": "Field C",
+      "Field D": "Field D",
+    },
+    tags: {
+      "Needs Review": "Needs Review",
+      Verified: "Verified",
+      Flagged: "Flagged",
+      "Follow-up": "Follow-up",
+    },
+    targets: {
+      aphids: "aphids",
+      mites: "mites",
+      thrips: "thrips",
+      whiteflies: "whiteflies",
+      worms: "worms",
+      leafminers: "leafminers",
+      "powdery mildew": "powdery mildew",
+      botrytis: "botrytis",
+      "fire blight": "fire blight",
+      "bacterial spot": "bacterial spot",
+      weeds: "weeds",
+    },
+    productKinds: {
+      Fungicide: "Fungicide",
+      Insecticide: "Insecticide",
+      Herbicide: "Herbicide",
+      Fertilizer: "Fertilizer",
+    },
+    languages: {
+      "en-US": "English",
+      "es-ES": "Spanish",
+    },
+  },
+};
+
+export type Dictionary = typeof en;
