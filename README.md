@@ -1,101 +1,128 @@
 # Toph
 
-**Live: https://toph-dashboard-eight.vercel.app**
+Farmworkers log what they did by voice, in English or Spanish, from their phone in the field. Toph turns those logs into the compliance records a farm has to show an auditor and file with the county.
 
-A working build of Toph for the LavaLab Fall 2026 dev challenge: the marketing site plus the farm-compliance dashboard behind it. Real accounts, a real Postgres database, real microphone recording with live transcription, and every screen wired to queried data rather than a static mockup.
+**Live app:** https://toph-dashboard-eight.vercel.app
 
-The problem it's built around: agriculture is one of the most heavily regulated industries in the US, audits arrive 5 to 10 times a year with little notice, and most farms still keep their records on paper. Toph captures the record where the work happens, by voice, in the worker's own language, and turns it into something an auditor can read.
-
-## Try it
-
-| | |
+| To try it as | Do this |
 |---|---|
-| Manager | `demo@bayranch.farm` / `TophDemo2026` → full dashboard |
-| Worker | Sign up at `/signup`, choose Worker, join code `BAYRANCH` → single log screen |
-| Language | The EN/ES toggle in the header of every screen, marketing and app |
+| A manager | Log in with `demo@bayranch.farm` / `TophDemo2026` |
+| A field worker | Sign up at `/signup`, choose **Worker**, enter the join code `BAYRANCH` |
 
-Signing up as a manager creates a **new farm** and generates its join code; signing up as a worker joins an existing farm by typing that code. Each farm is a tenant: accounts, employees, logs and messages all carry a farm id, every query filters on it, and the id comes from the session rather than from anything the client sends. Two people can try the live app at the same time without landing in each other's records.
+Log something as a worker on your phone, and it appears on the manager's dashboard within a few seconds.
 
-Voice recording needs Chrome or Edge (Web Speech API). Everywhere else the recorder falls back to a transcript box, and the Type tab works in any browser.
+---
 
-## Stack, and why
+## The problem
 
-| Layer | Choice | Why |
+- **Farms are audited often, with little notice.** Toph's own pitch puts it at 5 to 10 audits a year, and most farms still keep records in paper notebooks. Before an audit, someone rebuilds months of records by hand.
+- **The paperwork is legally required and strict.** In California, every pesticide application has to be reported to the county every month. A report missing the operator ID, site ID, acreage, EPA registration number, application method, or start time is rejected. Farms must keep each report for two years. ([California DPR](https://www.cdpr.ca.gov/pesticide-use-in-california/pesticide-use-reporting/))
+- **The people doing the work are often not the people writing it down.** 62% of US farmworkers are most comfortable speaking Spanish, and 29% can't speak English at all ([NAWS, via NCFH](https://www.ncfh.org/wp-content/uploads/2025/04/facts_about_farmworkers_fact_sheet_1.10.23-1.pdf)). In California it's 80% ([NAWS California report](https://www.dol.gov/sites/dolgov/files/ETA/naws/pdfs/NAWS%20Research%20Report%2015.pdf)). An English-only form means the record gets written later, by someone who wasn't there.
+
+**The result:** records are written late, from memory, with gaps that only surface when an inspector finds them.
+
+---
+
+## What each feature improves
+
+Every feature exists to fix one part of that problem.
+
+| Feature | What it improves | Why it matters |
 |---|---|---|
-| Framework | **Next.js 16 (App Router) + TypeScript** | One project serves the UI and the backend (Server Actions, Route Handlers), so there is no separate API server to deploy. TypeScript turns data-shape mistakes into compile errors. |
-| Styling | **Tailwind CSS v4** | CSS-first config (`@theme inline`), so the seven-theme switcher is CSS custom properties rather than duplicated class sets. |
-| ORM | **Prisma 7 with driver adapters** | Prisma 7 ships no bundled query engine: the driver is passed in explicitly (`@prisma/adapter-pg` + `pg`), which is what keeps it working in a serverless runtime. |
-| Database | **Supabase Postgres** | Postgres in every environment, including local dev. Prisma's migration SQL is provider-specific, so keeping SQLite locally would mean two migration histories that drift, the classic "worked on my machine" bug. The app connects through the transaction pooler (port 6543) because serverless functions open far more connections than Postgres will hold; migrations use the session pooler (5432), which supports the advisory locks and DDL a transaction pooler does not. |
-| Auth | **Custom session auth** (bcrypt + `jose`-signed httpOnly cookie + a `Session` DB row) | Follows the Next.js team's documented pattern (Data Access Layer plus proxy for optimistic redirects) instead of trusting a third-party library's Next 16 compatibility. Sessions are DB rows referenced by a signed cookie, never the raw id, so any session can be revoked server-side. |
-| Tenancy | **One farm id, taken from the session** | Every dashboard query filters on the signed-in account's farm, and writes use `updateMany`/`deleteMany` so the farm stays in the WHERE clause: a record id from another farm matches nothing rather than being edited. A server action is a public endpoint, so an id in its arguments is a request, not a permission. |
-| Rate limiting | **`LoginAttempt` rows, not memory** | Each serverless request may run on a different short-lived instance, so an in-memory counter would silently stop protecting anything the moment it deployed. |
-| Voice input | **MediaRecorder + Web Speech API** | Real recording with live speech-to-text built into the browser: no API key, no per-minute billing, and the audio stays on the page until the log is saved. |
-| Transcript parsing | **Deterministic parser** (`src/lib/extract.ts`) | Product, target, and rate are pulled out with rules, not an LLM, so the same sentence always yields the same record and the extraction is unit-testable. Handles spoken numbers in English and Spanish ("twenty-four ounces", "veinticuatro onzas"). |
-| i18n | **Cookie-based, server-rendered** | The language cookie is read on the server, so the first HTML response is already in the right language and `<html lang>` matches. localStorage would have meant a flash of English and a hydration mismatch. `es` is typed as `Dictionary`, so a missing translation is a build error. |
-| Time | **One farm timezone, not the server's or the viewer's** | Vercel's functions run in UTC, so a log recorded at 1:47 PM in California was first stamped 8:47 PM. Every timestamp and day boundary now resolves in the farm's zone, which is also the right unit for a record a manager in another state and an auditor next year both have to read the same way. |
-| Location | **Device GPS with a fallback** | A log carries the worker's real fix when they allow it, and the block's known coordinates when they don't. The record states which, instead of showing every pin as though it were measured. |
-| Map | **react-leaflet + Esri World Imagery** | A real pannable satellite map with no API key. |
-| Motion | **`motion`** | Scroll-linked progress and reveals, with `useReducedMotion` respected throughout. |
-| Hosting | **Vercel** | Built by the Next.js team; the build step runs `prisma migrate deploy` so the database schema and the code deploy together. |
+| **Voice logging** | The record is made at the moment of work, not rebuilt weeks later | Memory is the weakest link in a paper system |
+| **English and Spanish, on every screen** | A worker who doesn't read English can still file their own record | 62% of US farmworkers, and 80% in California, are most comfortable in Spanish |
+| **Automatic field extraction** | Product, rate, and pest are pulled out of what the worker said, with no typing | Typing on a phone in a field is slow, so fields get skipped |
+| **Label check** | Flags a product used on a pest its label doesn't cover, the same day | Using a pesticide inconsistent with its label is illegal under federal law (FIFRA) |
+| **Use Report tab** | The monthly county report assembles itself from the logs, ready to export or print | A missing required field gets the report rejected |
+| **Audit checklist** | Scores the records 0 or 1 on each audit question and names the exact record that fails | The farm finds its gaps before the inspector does |
+| **GPS location** | Shows where the work actually happened, and says whether it was measured or assumed | "Where was this applied?" is a question an auditor asks |
+| **Re-entry interval (REI)** | Shows how long workers must stay out of a sprayed field | Required by the EPA's Worker Protection Standard |
+| **Separate farms and roles** | Each farm only sees its own data; workers can log but can't edit or delete | A compliance record is only worth something if it can't be quietly changed |
 
-## Data model
+**The demo data scores 7 of 12 on purpose.** Every failure is real and points at a specific record, including an off-label application (Regalia sprayed for aphids) and a spray logged with no product at all. A checklist that always passes proves nothing.
+
+---
+
+## A 5-minute walkthrough
+
+1. **Home page.** Click an example in the live demo, or press the mic and say *"sprayed M-Pede at two gallons per acre for aphids in field B."* Watch the record fill in.
+2. **Log in as the manager.** The dashboard shows today's logs.
+3. **Use Report** (sidebar, under Compliance). See the county report and the audit checklist. Try **Export CSV** and **Print / PDF**.
+4. **Activity Logs.** Click **View** on a log to see the audio, transcript, parsed fields, compliance checks, and map.
+5. **Switch to Español** using the toggle at the bottom of the sidebar. The whole app changes language.
+6. **Sign up as a worker** on your phone with code `BAYRANCH`, tap **Attach my location**, and log something. It shows up on the manager's dashboard.
+
+---
+
+## How it's built, and why
+
+| Part | Choice | Why this over the alternatives |
+|---|---|---|
+| App framework | **Next.js 16 + TypeScript** | One project runs both the pages and the server code, so there's no separate backend to host. TypeScript catches mistakes before the app runs. |
+| Styling | **Tailwind CSS** | Fast to match the Figma's exact spacing. Themes are a few color variables instead of duplicated styles. |
+| Database | **Postgres on Supabase** | Real, hosted, and free. The same database runs locally and in production, so nothing "works on my machine" and breaks when deployed. |
+| Database access | **Prisma** | Every query is type-checked against the schema, so a typo in a field name fails at build time, not in front of a user. |
+| Login | **Custom sessions** (hashed passwords, signed cookie, session stored in the database) | Follows the Next.js team's own recommended pattern. Any session can be revoked from the server. |
+| Voice | **Browser's built-in recording and speech-to-text** | No API key and no per-minute cost. |
+| Extracting fields | **Rules, not an AI model** | The same sentence always gives the same record, and it can be unit tested. For compliance, predictable beats clever. A production version would add a model. |
+| Language | **Chosen on the server, stored in a cookie** | The page arrives already in the right language, with no flash of English. A missing Spanish translation is a build error. |
+| Time | **Always the farm's local time** | The server runs in UTC, which once stamped a 1:47 PM log as 8:47 PM. A record should read the same to the farm, a remote manager, and an auditor next year. |
+| Hosting | **Vercel** | Built by the Next.js team. Every push to GitHub redeploys automatically, and database changes deploy with the code. |
+
+---
+
+## Security
+
+- **Each farm is fully separate.** Every query is filtered by the logged-in user's farm, taken from their session, never from anything the browser sends. Verified by checking all 11 dashboard pages from a second farm's account: none of the first farm's data appears.
+- **Roles are enforced on the server, not just hidden in the UI.** Only managers can edit or delete records. A worker can only file logs under their own name.
+- **The database's public API is locked.** Supabase exposes tables through a public API unless row level security is on. It is now on for every table.
+- **Passwords are hashed** (bcrypt), and **failed logins are rate limited**, tracked in the database so the limit holds across servers.
+- **Backups:** `npx tsx scripts/backup.ts` saves every table to a local file. Backups never go to GitHub, because they contain password hashes.
+
+---
+
+## How the data is organized
 
 ```
-Farm 1---* User 1---* Session
-Farm 1---* Employee 1---* EmployeeLog *---* Tag
-Farm 1---* Message            LoginAttempt, BriefingRequest
+Farm ── Users (managers and workers)
+     ── Employees ── Logs ── Tags
+     ── Messages
 ```
 
-- **User**: `role` is `manager` or `worker`. A manager gets the dashboard; a worker gets one screen for logging activity and nothing else, matching the real product's split and meaning a worker cannot see anyone else's data.
-- **Farm**: the tenant. A manager creates one at signup and gets its join code; workers join with it. Employee names are unique per farm rather than globally, since two farms can both employ a Maria Lopez.
-- **EmployeeLog**: one logged activity: type, field, date, start/end time, a transcription-confidence score, the audio, the transcript, the language it was spoken in, an optional translation, `(lat, lng)` for the map, and the structured `product` / `target` / `rate` parsed out of the transcript. `source` records whether it was spoken or typed, because a typed entry is the worker's own words and a voice one is parsed.
-- **Tag**: `Needs Review`, `Verified`, `Flagged`, `Follow-up`, many-to-many with logs. Tagged logs surface under Audit Manager.
-- **BriefingRequest**: submissions from the public Request a Briefing form, a genuine write rather than a form that goes nowhere.
+A **farm** is the top level. A manager creates one when signing up and gets a join code; workers use that code to join. Everything else belongs to exactly one farm.
 
-## What's implemented
+---
 
-**Marketing site** (`/`, `/product`, `/use-cases`, `/company`): a live hero demo where you speak into the page and watch a compliance record assemble itself, scroll-driven field illustrations, a scan grid over real aerial photography, and a briefing form that writes to the database.
-
-**Worker screen** (`/log`): record by voice and watch it transcribe live, or use the Type tab. On save, the transcript is parsed into a structured record and checked against compliance rules. A worker can attach a real GPS fix with one tap (nothing is requested on page load, since a permission prompt before the worker has done anything is the fastest way to get it denied for good), and picks the application method when the activity applied a product.
-
-**Use Report** (manager): the document the farm actually has to produce. Every product application as one line, with the fields California requires on a monthly pesticide use report: operator and site ID, crop, acres treated, product and EPA registration number, rate, total applied over the block, target pest, application method, restricted-entry interval, applicator, and whether the location was GPS-verified or fell back to the block's coordinates. Filter by month or block, export to CSV, or print it as a signed document with letterhead.
-
-Underneath it, an **audit checklist** scored from those records rather than filled in by hand: eleven yes/no items, each 0 or 1, with the offending record named in the comments column. The farm sees its own gaps before an auditor does. In the demo data it scores 9 of 11, and the two failures are real: one off-label application and one record without a GPS fix.
-
-**Dashboard** (manager): live stat cards and this-month table; Activity Logs; Map with every field plotted; Audit Manager for flagged logs; Reports by activity and field; Schedule by day; Employees with per-person log counts and average accuracy; Performance; a shared Messages board; Settings; Support.
-
-Every log row expands to audio playback, the transcript, its translation, the parsed fields, the compliance checks, and the map location, and can be edited inline or deleted.
-
-**Compliance checks** (`src/lib/compliance.ts`) return keys, not sentences, so the same check renders in English or Spanish. One seeded log is deliberately non-compliant (Regalia applied for aphids, which it isn't labeled for) because a demo where every record passes doesn't show the point.
-
-**Tests**: 66 unit tests over the transcript parser, compliance rules, the use report (rate multiplied over acreage, checklist scoring, CSV quoting), farm-local time including daylight saving, auth schemas, field data, and the translation dictionaries (`npm test`).
-
-## Running locally
+## Run it locally
 
 ```bash
 npm install
 ```
 
-Create `.env.local` with a Postgres connection string, plus `SESSION_SECRET` in `.env`:
+Create `.env.local` with your Postgres connection strings, and `.env` with `SESSION_SECRET`:
 
 ```
 DATABASE_URL="postgresql://...:6543/postgres?pgbouncer=true&sslmode=no-verify"
 DIRECT_URL="postgresql://...:5432/postgres?sslmode=no-verify"
 ```
 
-`DATABASE_URL` is the pooled connection the app uses; `DIRECT_URL` is the direct one migrations need. With a provider that has no separate pooler, set both to the same string. Then:
+Then:
 
 ```bash
-npx prisma migrate dev   # applies the schema
-npm run seed             # 12 employees, 18 logs, farm "Bay Ranch" (join code BAYRANCH)
-npm run dev
+npx prisma migrate dev   # creates the tables
+npm run seed             # demo farm "Bay Ranch", 12 employees, 18 logs
+npm run dev              # http://localhost:3000
 ```
 
-Seeding replaces the demo logs, so anything recorded by hand is cleared.
+`npm test` runs 73 unit tests covering the voice parser, compliance rules, the Use Report, farm-local time (including daylight saving), login rules, and the translations.
 
-## Deploying
+---
 
-1. Push to GitHub and import the repo into Vercel.
-2. Provision Postgres (this deployment uses the Supabase integration).
-3. Set `DATABASE_URL`, `DIRECT_URL`, and `SESSION_SECRET` (`node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"`).
-4. Deploy. `npm run build` runs `prisma migrate deploy` first, so the schema is applied on every deploy; seed once from your machine.
+## Sources
+
+- California Department of Pesticide Regulation, [Pesticide Use Reporting](https://www.cdpr.ca.gov/pesticide-use-in-california/pesticide-use-reporting/)
+- National Center for Farmworker Health, [Facts About Farmworkers](https://www.ncfh.org/wp-content/uploads/2025/04/facts_about_farmworkers_fact_sheet_1.10.23-1.pdf) (National Agricultural Workers Survey data)
+- U.S. Department of Labor, [California Findings from the National Agricultural Workers Survey](https://www.dol.gov/sites/dolgov/files/ETA/naws/pdfs/NAWS%20Research%20Report%2015.pdf)
+- U.S. EPA, [Worker Protection Standard](https://www.epa.gov/pesticide-worker-safety/agricultural-worker-protection-standard-wps)
+
+The farm, its operator ID, and its field data are demo values. Product label details are illustrative and not a substitute for the actual label.
