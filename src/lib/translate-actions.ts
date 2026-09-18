@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/session";
+import { getCurrentUser, requireManager } from "@/lib/session";
 
 // MyMemory: a free, keyless public translation API — same "free tier,
 // no API key" pattern as the Web Speech API and Esri map tiles used
@@ -13,6 +13,7 @@ const TRANSLATE_URL = "https://api.mymemory.translated.net/get";
 export async function translateLog(logId: number): Promise<{ error?: string; text?: string }> {
   const user = await getCurrentUser();
   if (!user) return { error: "notAuthenticated" };
+  await requireManager();
 
   // Scoped to the caller's farm, so a log id guessed from another farm
   // comes back as "not found" rather than handing over its transcript.

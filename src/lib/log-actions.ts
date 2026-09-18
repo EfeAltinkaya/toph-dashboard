@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/session";
+import { getCurrentUser, requireManager } from "@/lib/session";
 import { coordsForField } from "@/lib/fields";
 import { farmDateAt, formatTime } from "@/lib/date-utils";
 import { extractLogFields } from "@/lib/extract";
@@ -37,13 +37,19 @@ export async function createLog(input: {
   // measured.
   location?: { lat: number; lng: number; accuracyM: number } | null;
 }) {
-  const { farmId } = await requireUser();
+  const user = await requireUser();
+  const { farmId } = user;
+  // A worker files as themselves, whatever name the browser sent: the name
+  // arrives from the client, and trusting it would let one worker put
+  // records under another's name. A manager can log on behalf of anyone
+  // on the farm, which is what the dashboard's New Log is for.
+  const employeeName = user.role === "worker" ? user.name : input.employeeName;
 
   // Employees are per farm, so the same name in two farms is two people.
   const employee = await prisma.employee.upsert({
-    where: { farmId_name: { farmId, name: input.employeeName } },
+    where: { farmId_name: { farmId, name: employeeName } },
     update: {},
-    create: { name: input.employeeName, farmId },
+    create: { name: employeeName, farmId },
   });
 
   const now = new Date();
@@ -94,7 +100,7 @@ export async function updateLogFields(
   id: number,
   fields: { product: string; target: string; rate: string; notes: string }
 ) {
-  const { farmId } = await requireUser();
+  const { farmId } = await requireManager();
   await prisma.employeeLog.updateMany({
     where: { id, farmId },
     data: {
@@ -108,7 +114,7 @@ export async function updateLogFields(
 }
 
 export async function setLogPhoto(id: number, photoUrl: string | null) {
-  const { farmId } = await requireUser();
+  const { farmId } = await requireManager();
   await prisma.employeeLog.updateMany({ where: { id, farmId }, data: { photoUrl } });
   revalidatePath("/", "layout");
 }
@@ -124,7 +130,7 @@ export async function updateLog(
     endTime: string;
   }
 ) {
-  const { farmId } = await requireUser();
+  const { farmId } = await requireManager();
 
   const employee = await prisma.employee.upsert({
     where: { farmId_name: { farmId, name: input.employeeName } },
@@ -156,7 +162,7 @@ export async function updateLog(
 }
 
 export async function deleteLog(id: number) {
-  const { farmId } = await requireUser();
+  const { farmId } = await requireManager();
   await prisma.employeeLog.deleteMany({ where: { id, farmId } });
   revalidatePath("/", "layout");
 }

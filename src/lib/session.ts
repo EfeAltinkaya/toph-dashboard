@@ -84,6 +84,19 @@ export const getCurrentUser = cache(async () => {
 });
 
 /**
+ * For server actions only a manager may call. The dashboard hides these
+ * controls from workers, but a server action is a public endpoint: a
+ * worker in the same farm could call deleteLog directly with any id. The
+ * role has to be checked where the write happens, not where the button is.
+ */
+export async function requireManager() {
+  const user = await getCurrentUser();
+  if (!user) throw new Error("Not authenticated");
+  if (user.role !== "manager") throw new Error("Managers only");
+  return user;
+}
+
+/**
  * The farm the signed-in user belongs to. Every dashboard query is scoped
  * by this, and it lives here as one named helper so a new page can't
  * accidentally read across farms by forgetting a `where` clause: the value

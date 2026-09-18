@@ -2,13 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { requireFarmId } from "@/lib/session";
+import { requireManager } from "@/lib/session";
 
 // Both actions take a log id from the client, so both check that the log
 // belongs to the caller's farm before touching it. A server action is a
 // public endpoint: the id in the argument is a request, not a permission.
 export async function markLogViewed(logId: number) {
-  const farmId = await requireFarmId();
+  const { farmId } = await requireManager();
   await prisma.employeeLog.updateMany({
     where: { id: logId, farmId },
     data: { isNew: false },
@@ -17,7 +17,7 @@ export async function markLogViewed(logId: number) {
 }
 
 export async function toggleLogTag(logId: number, tagId: number) {
-  const farmId = await requireFarmId();
+  const { farmId } = await requireManager();
   const log = await prisma.employeeLog.findFirst({
     where: { id: logId, farmId },
     include: { tags: true },

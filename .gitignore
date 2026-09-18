@@ -53,3 +53,6 @@ next-env.d.ts
 /skills-lock.json
 /AGENTS.md
 /CLAUDE.md
+
+# Database backups: password hashes and every farm's records. Never commit.
+backups/

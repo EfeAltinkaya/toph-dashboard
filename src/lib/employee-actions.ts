@@ -2,13 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { getCurrentUser } from "@/lib/session";
+import { requireManager } from "@/lib/session";
 
-async function requireUser() {
-  const user = await getCurrentUser();
-  if (!user) throw new Error("Not authenticated");
-  return user;
-}
+// Every action here changes the farm's roster, which is a manager's call.
+const requireUser = requireManager;
 
 export async function addEmployee(name: string) {
   const { farmId } = await requireUser();
