@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { requireFarmId } from "@/lib/session";
-import { applicationRecords } from "@/lib/records";
+import { APPLICATION_ACTIVITIES, applicationRecords } from "@/lib/records";
 import { RecordsReport } from "@/components/RecordsReport";
 
 // The report reflects whatever has been logged, including a log filed a
@@ -14,7 +14,12 @@ export default async function RecordsPage() {
   // across the wire to throw most of it away.
   const farmId = await requireFarmId();
   const logs = await prisma.employeeLog.findMany({
-    where: { farmId, product: { not: null } },
+    where: {
+      farmId,
+      // A spray logged without its product still has to be on the report
+      // (flagged), so this can't be "product is not null" alone.
+      OR: [{ product: { not: null } }, { activity: { in: APPLICATION_ACTIVITIES } }],
+    },
     include: { employee: { select: { name: true } } },
     orderBy: { date: "desc" },
   });

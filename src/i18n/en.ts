@@ -763,7 +763,11 @@ export const en = {
     blockCoords: "Block coordinates",
     complete: "Complete",
     incomplete: "Incomplete",
+    notRecorded: "Not recorded",
+    notRequired: "Not required",
+    noGps: "No GPS fix",
     gaps: {
+      noProduct: "No product recorded",
       productNotApproved: "Product not on the approved list",
       noEpaRegNo: "No EPA registration number",
       offLabel: "Target not on the product label",
@@ -783,6 +787,7 @@ export const en = {
       notApplicable: "No records in this period require it.",
       total: "Score: {score} of {total}",
       items: {
+        productRecorded: "Every spray and soil application names the product used.",
         productsApproved: "Every product applied is on the farm's approved list.",
         epaRegNos: "Every pesticide applied has an EPA registration number on file.",
         onLabel: "No application was made for a pest outside the product's label.",

@@ -38,7 +38,8 @@ export type ApplicationRecord = {
   siteId: string;
   acres: number;
   crop: string;
-  product: string;
+  /** Null when an application was logged without naming the product. */
+  product: string | null;
   epaRegNo: string | null;
   kind: string | null;
   rate: string | null;
@@ -53,7 +54,17 @@ export type ApplicationRecord = {
   gaps: GapId[];
 };
 
+/**
+ * Activities that put a product on the ground. A log of one of these
+ * belongs on the use report whether or not a product was captured: a
+ * spray with no product recorded is the worst gap a report can have, and
+ * leaving it off the page would hide exactly the record an auditor would
+ * find.
+ */
+export const APPLICATION_ACTIVITIES = ["Spraying", "Soil work"];
+
 export type GapId =
+  | "noProduct"
   | "productNotApproved"
   | "noEpaRegNo"
   | "offLabel"
@@ -79,21 +90,29 @@ export function totalApplied(rate: string | null, acres: number): string | null 
 }
 
 /**
- * The applications in the log history, as report lines. Only logs that
- * actually put a product out belong on a pesticide use report, so
- * everything else (scouting, pruning, harvest) is left off rather than
- * padding the document with blank rows.
+ * The applications in the log history, as report lines: every log that
+ * named a product, plus every spray or soil application that didn't.
+ * Scouting, pruning and harvest put nothing on the ground and are left off
+ * rather than padding the document with blank rows.
  */
+export function isApplication(log: { product: string | null; activity: string }) {
+  return !!log.product || APPLICATION_ACTIVITIES.includes(log.activity);
+}
+
 export function applicationRecords(logs: RecordSourceLog[]): ApplicationRecord[] {
   return logs
-    .filter((log) => log.product)
+    .filter(isApplication)
     .map((log) => {
       const info = fieldInfo(log.field);
       const approved = findApprovedProduct(log.product);
       const isPesticide = approved ? approved.kind !== "Fertilizer" : true;
       const gaps: GapId[] = [];
 
-      if (!approved) gaps.push("productNotApproved");
+      // No product at all is its own failure, and it's the one that
+      // matters: "not on the approved list" would be true but would read
+      // as if the worker had named the wrong product.
+      if (!log.product) gaps.push("noProduct");
+      else if (!approved) gaps.push("productNotApproved");
       // A fertilizer has no EPA number to be missing, and nothing to be
       // off-label for: it isn't reportable as a pesticide use.
       if (approved && isPesticide && !approved.epaRegNo) gaps.push("noEpaRegNo");
@@ -113,7 +132,7 @@ export function applicationRecords(logs: RecordSourceLog[]): ApplicationRecord[]
         siteId: info.siteId,
         acres: info.acres,
         crop: info.crop,
-        product: log.product!,
+        product: log.product,
         epaRegNo: approved?.epaRegNo ?? null,
         kind: approved?.kind ?? null,
         rate: log.rate,
@@ -168,6 +187,7 @@ export type ChecklistItem = {
 };
 
 export type ChecklistId =
+  | "productRecorded"
   | "productsApproved"
   | "epaRegNos"
   | "onLabel"
@@ -197,8 +217,12 @@ function item(
 }
 
 export function auditChecklist(records: ApplicationRecord[]): ChecklistItem[] {
-  const isPesticide = (r: ApplicationRecord) => r.kind !== "Fertilizer";
+  // Label facts (EPA number, target, REI) can only be checked for a product
+  // that was named. A spray with no product fails "product recorded", once,
+  // instead of failing four items for a product that doesn't exist.
+  const isPesticide = (r: ApplicationRecord) => !!r.product && r.kind !== "Fertilizer";
   return [
+    item("productRecorded", records, (r) => !r.product),
     item("productsApproved", records, (r) => r.gaps.includes("productNotApproved")),
     item("epaRegNos", records, (r) => !r.epaRegNo, isPesticide),
     item("onLabel", records, (r) => r.gaps.includes("offLabel")),
@@ -267,7 +291,11 @@ export function recordsToCsv(records: ApplicationRecord[]): string {
       r.gpsVerified
         ? `GPS ${r.gpsAccuracyM ? `±${Math.round(r.gpsAccuracyM)}m` : "verified"}`
         : "Block coordinates",
-      r.gaps.length === 0 ? "Complete" : `Incomplete: ${r.gaps.join(", ")}`,
+      r.gaps.length === 0
+        ? r.gpsVerified
+          ? "Complete"
+          : "Complete (no GPS fix)"
+        : `Incomplete: ${r.gaps.join(", ")}`,
     ]
       .map(csvCell)
       .join(",")

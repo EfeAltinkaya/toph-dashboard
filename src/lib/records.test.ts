@@ -99,6 +99,26 @@ describe("applicationRecords", () => {
     expect(record.gaps).toEqual([]);
   });
 
+  it("keeps a spray that named no product, and flags it", () => {
+    // The bug this covers: the report used to include only logs that named
+    // a product, so a spray logged with nothing captured (a phone that
+    // recorded but couldn't transcribe) disappeared from the page entirely.
+    const records = applicationRecords([
+      log({ id: 59, product: null, target: null, rate: null }),
+    ]);
+    expect(records.map((r) => r.id)).toEqual([59]);
+    expect(records[0].gaps).toContain("noProduct");
+    // Not "not on the approved list": there was no product to check.
+    expect(records[0].gaps).not.toContain("productNotApproved");
+  });
+
+  it("still leaves off activities that apply nothing", () => {
+    const records = applicationRecords([
+      log({ id: 1, activity: "Harvesting", product: null, target: null, rate: null }),
+    ]);
+    expect(records).toEqual([]);
+  });
+
   it("orders newest first so the current month reads from the top", () => {
     const records = applicationRecords([
       log({ id: 1, date: new Date("2026-09-10T18:00:00Z") }),
@@ -140,6 +160,18 @@ describe("auditChecklist", () => {
     const rates = auditChecklist(records).find((i) => i.id === "ratesRecorded")!;
     expect(rates.score).toBe(0);
     expect(rates.failing).toEqual([7]);
+  });
+
+  it("fails a missing product once, not once per label fact", () => {
+    const checklist = auditChecklist(
+      applicationRecords([log({ id: 59, product: null, target: null })])
+    );
+    const byId = Object.fromEntries(checklist.map((i) => [i.id, i]));
+    expect(byId.productRecorded).toMatchObject({ score: 0, failing: [59] });
+    // No product means no EPA number or REI to look up, so those items
+    // don't pile on for a product that doesn't exist.
+    expect(byId.epaRegNos.applicable).toBe(0);
+    expect(byId.reiDocumented.applicable).toBe(0);
   });
 
   it("skips items that don't apply to the record", () => {

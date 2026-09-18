@@ -755,7 +755,11 @@ export const es: Dictionary = {
     blockCoords: "Coordenadas del bloque",
     complete: "Completo",
     incomplete: "Incompleto",
+    notRecorded: "Sin registrar",
+    notRequired: "No requerido",
+    noGps: "Sin ubicación GPS",
     gaps: {
+      noProduct: "Sin producto registrado",
       productNotApproved: "Producto fuera de la lista aprobada",
       noEpaRegNo: "Sin número de registro EPA",
       offLabel: "Objetivo fuera de la etiqueta del producto",
@@ -775,6 +779,8 @@ export const es: Dictionary = {
       notApplicable: "Ningún registro de este periodo lo requiere.",
       total: "Puntaje: {score} de {total}",
       items: {
+        productRecorded:
+          "Cada aplicación de rociado o de suelo indica el producto utilizado.",
         productsApproved:
           "Todo producto aplicado está en la lista aprobada de la finca.",
         epaRegNos:

@@ -234,17 +234,36 @@ export function RecordsReport({ records }: { records: ApplicationRecord[] }) {
                   <td className={TD}>{rec.crop}</td>
                   <td className={`${TD} text-right tabular-nums`}>{rec.acres}</td>
                   <td className={TD}>
-                    <span className="font-medium text-neutral-900">{rec.product}</span>
+                    {rec.product ? (
+                      <span className="font-medium text-neutral-900">{rec.product}</span>
+                    ) : (
+                      <span className="font-medium text-red-700">{r.notRecorded}</span>
+                    )}
                     {rec.kind && (
                       <span className="block text-xs text-neutral-500">
                         {tr(t.vocab.productKinds, rec.kind)}
                       </span>
                     )}
                   </td>
-                  <td className={`${TD} tabular-nums`}>{rec.epaRegNo ?? "—"}</td>
+                  <td className={`${TD} tabular-nums`}>
+                    {rec.epaRegNo ??
+                      (rec.kind === "Fertilizer" ? (
+                        <span className="text-xs text-neutral-400">{r.notRequired}</span>
+                      ) : (
+                        "—"
+                      ))}
+                  </td>
                   <td className={`${TD} whitespace-nowrap`}>{rec.rate ?? "—"}</td>
                   <td className={`${TD} whitespace-nowrap`}>{rec.totalApplied ?? "—"}</td>
-                  <td className={TD}>{rec.target ? tr(t.vocab.targets, rec.target) : "—"}</td>
+                  <td className={TD}>
+                    {rec.target ? (
+                      tr(t.vocab.targets, rec.target)
+                    ) : rec.kind === "Fertilizer" ? (
+                      <span className="text-xs text-neutral-400">{r.notRequired}</span>
+                    ) : (
+                      "—"
+                    )}
+                  </td>
                   <td className={TD}>{rec.method ? tr(t.vocab.methods, rec.method) : "—"}</td>
                   <td className={`${TD} text-right tabular-nums`}>
                     {rec.reiHours === null ? "—" : format(r.hours, { hours: String(rec.reiHours) })}
@@ -259,9 +278,16 @@ export function RecordsReport({ records }: { records: ApplicationRecord[] }) {
                   </td>
                   <td className={TD}>
                     {rec.gaps.length === 0 ? (
-                      <span className="whitespace-nowrap text-xs font-medium text-green-700">
-                        {r.complete}
-                      </span>
+                      <>
+                        <span className="block whitespace-nowrap text-xs font-medium text-green-700">
+                          {r.complete}
+                        </span>
+                        {!rec.gpsVerified && (
+                          <span className="mt-0.5 block whitespace-nowrap text-xs font-medium text-amber-700">
+                            {r.noGps}
+                          </span>
+                        )}
+                      </>
                     ) : (
                       <span className="text-xs font-medium text-red-700">
                         {rec.gaps.map((gap) => r.gaps[gap]).join(" · ")}
